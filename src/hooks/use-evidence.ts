@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { PaginatedResult } from "@/types";
+import { tStatic } from "@/i18n";
 import { toast } from "sonner";
 
 export function useEvidence(params: Record<string, string | number | undefined> = {}) {
@@ -37,7 +38,7 @@ export function useCreateEvidence() {
       qc.invalidateQueries({ queryKey: ["evidence"] });
       qc.invalidateQueries({ queryKey: ["problems"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Evidence created");
+      toast.success(tStatic("evidence.created"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -54,7 +55,7 @@ export function useUpdateEvidence(id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["evidence"] });
       qc.invalidateQueries({ queryKey: ["problems"] });
-      toast.success("Evidence updated");
+      toast.success(tStatic("evidence.updated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -68,7 +69,7 @@ export function useDeleteEvidence() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["evidence"] });
       qc.invalidateQueries({ queryKey: ["problems"] });
-      toast.success("Evidence deleted");
+      toast.success(tStatic("evidence.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });

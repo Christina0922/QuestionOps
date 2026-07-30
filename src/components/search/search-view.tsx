@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export function SearchView() {
+  const { t, locale } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const initial = searchParams.get("q") || "";
@@ -27,8 +29,8 @@ export function SearchView() {
   return (
     <div>
       <PageHeader
-        title="Search"
-        description="Find problems, evidence, knowledge, and capabilities."
+        title={t("search.title")}
+        description={t("search.description")}
       />
       <form
         className="mb-6 flex gap-2"
@@ -41,19 +43,25 @@ export function SearchView() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search…"
+          placeholder={t("search.placeholder")}
         />
-        <Button type="submit">Search</Button>
+        <Button type="submit">{t("common.search")}</Button>
       </form>
       {isLoading || isFetching ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Search failed" description={(error as Error).message} />
+        <EmptyState
+          title={t("search.failed")}
+          description={(error as Error).message}
+        />
       ) : null}
       {!submitted ? (
-        <EmptyState title="Enter a query to search" />
+        <EmptyState title={t("search.enterQuery")} />
       ) : null}
       {data && data.items.length === 0 ? (
-        <EmptyState title="No results" description={`Nothing matched “${submitted}”.`} />
+        <EmptyState
+          title={t("search.noResults")}
+          description={t("search.noResultsHint", { q: submitted })}
+        />
       ) : null}
       <div className="space-y-3">
         {data?.items.map((hit) => (
@@ -70,7 +78,7 @@ export function SearchView() {
               </Link>
               <p className="mt-1 text-sm text-muted-foreground">{hit.snippet}</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Updated {formatDate(hit.updatedAt)}
+                {t("common.updated")} {formatDate(hit.updatedAt, locale)}
               </p>
             </CardContent>
           </Card>
@@ -81,21 +89,25 @@ export function SearchView() {
 }
 
 export function ActivityView() {
+  const { t, locale } = useI18n();
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useActivity(page);
 
   return (
     <div>
       <PageHeader
-        title="Activity"
-        description="Audit trail of creates, updates, and deletes."
+        title={t("activity.title")}
+        description={t("activity.description")}
       />
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Failed to load" description={(error as Error).message} />
+        <EmptyState
+          title={t("activity.failed")}
+          description={(error as Error).message}
+        />
       ) : null}
       {data?.items.length === 0 ? (
-        <EmptyState title="No activity yet" />
+        <EmptyState title={t("activity.empty")} />
       ) : null}
       <div className="space-y-3">
         {(data?.items as Array<{
@@ -115,11 +127,11 @@ export function ActivityView() {
                 </div>
                 <p className="text-sm">{item.summary}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {item.user?.name || item.user?.email || "System"}
+                  {item.user?.name || item.user?.email || t("common.system")}
                 </p>
               </div>
               <div className="shrink-0 text-xs text-muted-foreground">
-                {formatDate(item.createdAt)}
+                {formatDate(item.createdAt, locale)}
               </div>
             </CardContent>
           </Card>
@@ -132,14 +144,14 @@ export function ActivityView() {
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            Previous
+            {t("common.previous")}
           </Button>
           <Button
             variant="outline"
             disabled={page >= data.totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Next
+            {t("common.next")}
           </Button>
         </div>
       ) : null}

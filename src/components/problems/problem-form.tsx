@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ProblemPriority, ProblemStatus } from "@/types";
+import { useI18n } from "@/i18n";
+import type { MessageKey } from "@/i18n";
 
 type ProblemFormValues = {
   title: string;
@@ -51,6 +53,7 @@ export function ProblemForm({
   initial?: Partial<ProblemFormValues>;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [values, setValues] = useState<ProblemFormValues>({
     ...defaults,
     ...initial,
@@ -85,13 +88,13 @@ export function ProblemForm({
     <Card>
       <CardHeader>
         <CardTitle>
-          {mode === "create" ? "New problem" : "Edit problem"}
+          {mode === "create" ? t("problems.new") : t("problems.edit")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t("common.title")}</Label>
             <Input
               id="title"
               required
@@ -102,7 +105,7 @@ export function ProblemForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("common.description")}</Label>
             <Textarea
               id="description"
               required
@@ -115,7 +118,7 @@ export function ProblemForm({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="source">Source</Label>
+              <Label htmlFor="source">{t("problems.field.source")}</Label>
               <Input
                 id="source"
                 value={values.source}
@@ -125,7 +128,7 @@ export function ProblemForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customer">Customer</Label>
+              <Label htmlFor="customer">{t("problems.field.customer")}</Label>
               <Input
                 id="customer"
                 value={values.customer}
@@ -137,7 +140,7 @@ export function ProblemForm({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>{t("problems.field.priority")}</Label>
               <Select
                 value={values.priority}
                 onValueChange={(priority: ProblemPriority) =>
@@ -150,14 +153,14 @@ export function ProblemForm({
                 <SelectContent>
                   {(["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const).map((p) => (
                     <SelectItem key={p} value={p}>
-                      {p}
+                      {t(`priority.${p}` as MessageKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t("problems.field.status")}</Label>
               <Select
                 value={values.status}
                 onValueChange={(status: ProblemStatus) =>
@@ -172,7 +175,7 @@ export function ProblemForm({
                     ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const
                   ).map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s.replace("_", " ")}
+                      {t(`status.${s}` as MessageKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -180,7 +183,7 @@ export function ProblemForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <Label>{t("common.tags")}</Label>
             <TagInput
               value={values.tags}
               onChange={(tags) => setValues((v) => ({ ...v, tags }))}
@@ -188,10 +191,10 @@ export function ProblemForm({
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={pending}>
-              {pending ? "Saving…" : "Save"}
+              {pending ? t("common.saving") : t("common.save")}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </form>

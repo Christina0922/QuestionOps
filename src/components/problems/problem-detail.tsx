@@ -15,17 +15,19 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate, truncate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useActivity } from "@/hooks/use-meta";
+import { useI18n } from "@/i18n";
 
 export function ProblemDetail({ id }: { id: string }) {
   const { data, isLoading, error } = useProblem(id);
   const remove = useDeleteProblem();
   const router = useRouter();
+  const { t, locale } = useI18n();
 
   if (isLoading) return <ListSkeleton rows={5} />;
   if (error || !data) {
     return (
       <EmptyState
-        title="Problem not found"
+        title={t("problems.notFound")}
         description={(error as Error | undefined)?.message}
       />
     );
@@ -70,20 +72,22 @@ export function ProblemDetail({ id }: { id: string }) {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/problems/${id}/edit`}>Edit</Link>
+            <Link href={`/problems/${id}/edit`}>{t("common.edit")}</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={`/evidence/new?problemId=${id}`}>Add evidence</Link>
+            <Link href={`/evidence/new?problemId=${id}`}>
+              {t("problems.addEvidence")}
+            </Link>
           </Button>
           <Button
             variant="destructive"
             onClick={async () => {
-              if (!confirm("Delete this problem?")) return;
+              if (!confirm(t("problems.confirmDelete"))) return;
               await remove.mutateAsync(id);
               router.push("/problems");
             }}
           >
-            Delete
+            {t("common.delete")}
           </Button>
         </div>
       </div>
@@ -91,7 +95,7 @@ export function ProblemDetail({ id }: { id: string }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Problem</CardTitle>
+            <CardTitle className="text-base">{t("entity.problem")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             <p className="whitespace-pre-wrap leading-relaxed">
@@ -99,23 +103,37 @@ export function ProblemDetail({ id }: { id: string }) {
             </p>
             <dl className="grid grid-cols-2 gap-3 text-muted-foreground">
               <div>
-                <dt className="text-xs uppercase tracking-wide">Customer</dt>
-                <dd className="text-foreground">{problem.customer || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide">Source</dt>
-                <dd className="text-foreground">{problem.source || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide">Reporter</dt>
+                <dt className="text-xs uppercase tracking-wide">
+                  {t("problems.field.customer")}
+                </dt>
                 <dd className="text-foreground">
-                  {problem.reporter?.name || problem.reporter?.email || "—"}
+                  {problem.customer || t("common.none")}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide">Updated</dt>
+                <dt className="text-xs uppercase tracking-wide">
+                  {t("problems.field.source")}
+                </dt>
                 <dd className="text-foreground">
-                  {formatDate(problem.updatedAt)}
+                  {problem.source || t("common.none")}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide">
+                  {t("problems.field.reporter")}
+                </dt>
+                <dd className="text-foreground">
+                  {problem.reporter?.name ||
+                    problem.reporter?.email ||
+                    t("common.none")}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide">
+                  {t("common.updated")}
+                </dt>
+                <dd className="text-foreground">
+                  {formatDate(problem.updatedAt, locale)}
                 </dd>
               </div>
             </dl>
@@ -124,20 +142,21 @@ export function ProblemDetail({ id }: { id: string }) {
 
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-base">Evidence timeline</CardTitle>
+            <CardTitle className="text-base">
+              {t("problems.evidenceTimeline")}
+            </CardTitle>
             <Badge variant="secondary">{problem.evidences.length}</Badge>
           </CardHeader>
           <CardContent className="space-y-3">
             {problem.evidences.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No evidence yet.{" "}
+                {t("problems.noEvidence")}{" "}
                 <Link
                   className="text-primary underline"
                   href={`/evidence/new?problemId=${id}`}
                 >
-                  Add the first observation
+                  {t("problems.addFirstEvidence")}
                 </Link>
-                .
               </p>
             ) : (
               problem.evidences.map((e) => (
@@ -147,8 +166,11 @@ export function ProblemDetail({ id }: { id: string }) {
                   className="block rounded-md border p-3 transition-colors hover:bg-muted/40"
                 >
                   <div className="mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span>{formatDate(e.createdAt)}</span>
-                    <span>conf {(e.confidence * 100).toFixed(0)}%</span>
+                    <span>{formatDate(e.createdAt, locale)}</span>
+                    <span>
+                      {t("evidence.field.confidence")}{" "}
+                      {(e.confidence * 100).toFixed(0)}%
+                    </span>
                   </div>
                   <p className="text-sm">{truncate(e.observation, 180)}</p>
                 </Link>
@@ -161,14 +183,18 @@ export function ProblemDetail({ id }: { id: string }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-base">Knowledge</CardTitle>
+            <CardTitle className="text-base">{t("problems.knowledge")}</CardTitle>
             <Button size="sm" variant="outline" asChild>
-              <Link href={`/knowledge/new?problemId=${id}`}>Add</Link>
+              <Link href={`/knowledge/new?problemId=${id}`}>
+                {t("common.add")}
+              </Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {problem.knowledge.length === 0 ? (
-              <p className="text-sm text-muted-foreground">None linked.</p>
+              <p className="text-sm text-muted-foreground">
+                {t("problems.noneLinked")}
+              </p>
             ) : (
               problem.knowledge.map((k) => (
                 <Link
@@ -185,14 +211,20 @@ export function ProblemDetail({ id }: { id: string }) {
 
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-base">Capabilities</CardTitle>
+            <CardTitle className="text-base">
+              {t("problems.capabilities")}
+            </CardTitle>
             <Button size="sm" variant="outline" asChild>
-              <Link href={`/capabilities/new?problemId=${id}`}>Add</Link>
+              <Link href={`/capabilities/new?problemId=${id}`}>
+                {t("common.add")}
+              </Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {problem.capabilities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">None linked.</p>
+              <p className="text-sm text-muted-foreground">
+                {t("problems.noneLinked")}
+              </p>
             ) : (
               problem.capabilities.map((c) => (
                 <Link
@@ -211,7 +243,7 @@ export function ProblemDetail({ id }: { id: string }) {
       {problem.clusters.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Clusters</CardTitle>
+            <CardTitle className="text-base">{t("problems.clusters")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {problem.clusters.map((c) => (
@@ -229,6 +261,7 @@ export function ProblemDetail({ id }: { id: string }) {
 }
 
 function ProblemHistory({ problemId }: { problemId: string }) {
+  const { t, locale } = useI18n();
   const { data, isLoading } = useActivity(1, {
     entityType: "problem",
     entityId: problemId,
@@ -245,13 +278,15 @@ function ProblemHistory({ problemId }: { problemId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">History</CardTitle>
+        <CardTitle className="text-base">{t("problems.history")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No activity yet.</p>
+          <p className="text-sm text-muted-foreground">
+            {t("problems.noHistory")}
+          </p>
         ) : (
           items.map((item) => (
             <div
@@ -261,12 +296,12 @@ function ProblemHistory({ problemId }: { problemId: string }) {
               <div>
                 <p className="text-sm">{item.summary}</p>
                 <p className="text-xs text-muted-foreground">
-                  {item.user?.name || item.user?.email || "System"} ·{" "}
+                  {item.user?.name || item.user?.email || t("common.system")} ·{" "}
                   {item.action}
                 </p>
               </div>
               <span className="shrink-0 text-xs text-muted-foreground">
-                {formatDate(item.createdAt)}
+                {formatDate(item.createdAt, locale)}
               </span>
             </div>
           ))

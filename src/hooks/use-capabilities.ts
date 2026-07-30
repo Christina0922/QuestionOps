@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { PaginatedResult } from "@/types";
+import { tStatic } from "@/i18n";
 import { toast } from "sonner";
 
 export function useCapabilities(
@@ -42,7 +43,7 @@ export function useCreateCapability() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["capabilities"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Capability created");
+      toast.success(tStatic("capabilities.created"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -58,7 +59,7 @@ export function useUpdateCapability(id: string) {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["capabilities"] });
-      toast.success("Capability updated");
+      toast.success(tStatic("capabilities.updated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -71,7 +72,7 @@ export function useDeleteCapability() {
       apiFetch(`/api/capabilities/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["capabilities"] });
-      toast.success("Capability deleted");
+      toast.success(tStatic("capabilities.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });

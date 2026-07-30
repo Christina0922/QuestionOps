@@ -1,4 +1,7 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/i18n";
 import type { ProblemPriority, ProblemStatus } from "@/types";
 
 const priorityVariant: Record<
@@ -22,9 +25,19 @@ const statusVariant: Record<
 };
 
 export function PriorityBadge({ priority }: { priority: ProblemPriority }) {
-  return <Badge variant={priorityVariant[priority]}>{priority}</Badge>;
+  const { t } = useI18n();
+  return (
+    <Badge variant={priorityVariant[priority]}>
+      {t(`priority.${priority}` as const)}
+    </Badge>
+  );
 }
 
 export function StatusBadge({ status }: { status: ProblemStatus }) {
-  return <Badge variant={statusVariant[status]}>{status.replace("_", " ")}</Badge>;
+  const { t } = useI18n();
+  return (
+    <Badge variant={statusVariant[status]}>
+      {t(`status.${status}` as const)}
+    </Badge>
+  );
 }

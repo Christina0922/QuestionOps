@@ -122,3 +122,73 @@ Without a key, endpoints return deterministic template drafts so the MVP flow st
 7. Search across entities
 8. Review activity log
 9. Edit / soft-delete records
+
+## YouTube integration (Phase Y1+)
+
+Architecture docs live in `docs/`:
+
+- `youtube-architecture.md` — system design + **Inngest** job queue choice
+- `youtube-data-model.md`
+- `youtube-oauth-flow.md`
+- `youtube-sync-strategy.md`
+- `youtube-ai-pipeline.md`
+- `youtube-security.md`
+- `youtube-mvp-checklist.md`
+
+### Google Cloud setup (operator)
+
+1. Create a Google Cloud project
+2. Enable **YouTube Data API v3**
+3. Configure OAuth consent screen (External/Internal as needed)
+4. Create OAuth **Web** client credentials
+5. Add authorized redirect URI:
+   - Local: `http://localhost:3000/api/integrations/youtube/callback`
+   - Prod: `https://YOUR_DOMAIN/api/integrations/youtube/callback`
+6. Copy Client ID / Secret into `.env` (never commit secrets)
+
+### Environment
+
+```env
+APP_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI="http://localhost:3000/api/integrations/youtube/callback"
+TOKEN_ENCRYPTION_KEY=   # openssl rand -base64 32
+YOUTUBE_MOCK_OAUTH=false
+YOUTUBE_SEED_MOCK=false
+```
+
+Generate encryption key:
+
+```bash
+openssl rand -base64 32
+```
+
+### Local test without Google
+
+```env
+YOUTUBE_MOCK_OAUTH=true
+TOKEN_ENCRYPTION_KEY=<any-valid-32-byte-base64>
+```
+
+Then open `/settings/integrations/youtube` and click connect — mock channel is created.
+
+Videos: `/youtube/videos` → sync → open a video → import comments → **Run analysis** → approve clusters → generate Knowledge/Capability candidates. Settings page shows quota/jobs admin.
+
+Or seed a mock connection:
+
+```bash
+# PowerShell
+$env:YOUTUBE_SEED_MOCK="true"; npm run db:seed
+```
+
+### Job queue (Phase Y3+)
+
+Comment import jobs persist progress in `YouTubeSyncJob` (refresh-safe). Local MVP runs the worker **inline** after API start; production Inngest wiring is Phase Y7. See `docs/youtube-architecture.md`.
+
+### Production notes
+
+- Update Redirect URI after deploy
+- Google may require OAuth verification for `youtube.force-ssl`
+- Prepare privacy policy + terms URLs on the consent screen
+- Operators never see raw OAuth tokens (encrypted at rest)

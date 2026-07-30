@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { PaginatedResult } from "@/types";
+import { tStatic } from "@/i18n";
 import { toast } from "sonner";
 
 export function useKnowledge(params: Record<string, string | number | undefined> = {}) {
@@ -36,7 +37,7 @@ export function useCreateKnowledge() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["knowledge"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Knowledge created");
+      toast.success(tStatic("knowledge.created"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -52,7 +53,7 @@ export function useUpdateKnowledge(id: string) {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["knowledge"] });
-      toast.success("Knowledge updated");
+      toast.success(tStatic("knowledge.updated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -65,7 +66,7 @@ export function useDeleteKnowledge() {
       apiFetch(`/api/knowledge/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["knowledge"] });
-      toast.success("Knowledge deleted");
+      toast.success(tStatic("knowledge.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -83,6 +84,7 @@ export function useKnowledgeDraft() {
         method: "POST",
         body: JSON.stringify({ evidenceIds }),
       }),
+    onSuccess: () => toast.success(tStatic("knowledge.draftApplied")),
     onError: (e: Error) => toast.error(e.message),
   });
 }

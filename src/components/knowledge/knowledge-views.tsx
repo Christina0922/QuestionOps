@@ -32,29 +32,35 @@ import {
 } from "@/components/ui/select";
 import { formatDate, truncate } from "@/lib/utils";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n";
 
 export function KnowledgeList() {
+  const { t, locale } = useI18n();
   const { data, isLoading, error } = useKnowledge();
   const remove = useDeleteKnowledge();
 
   return (
     <div>
       <PageHeader
-        title="Knowledge"
-        description="Synthesized insights from evidence and clusters."
+        title={t("knowledge.title")}
+        description={t("knowledge.description")}
         actionHref="/knowledge/new"
-        actionLabel="New knowledge"
+        actionLabel={t("knowledge.new")}
       />
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Failed to load" description={(error as Error).message} />
+        <EmptyState
+          title={t("common.failedLoad")}
+          description={(error as Error).message}
+        />
       ) : null}
       {data?.items.length === 0 ? (
         <EmptyState
-          title="No knowledge yet"
+          title={t("knowledge.empty")}
+          description={t("knowledge.emptyHint")}
           action={
             <Button asChild>
-              <Link href="/knowledge/new">Create knowledge</Link>
+              <Link href="/knowledge/new">{t("knowledge.new")}</Link>
             </Button>
           }
         />
@@ -82,22 +88,24 @@ export function KnowledgeList() {
                 </p>
                 <TagList tags={k.tags} />
                 <p className="text-xs text-muted-foreground">
-                  Updated {formatDate(k.updatedAt)} · conf{" "}
+                  {t("common.updated")} {formatDate(k.updatedAt, locale)} ·{" "}
+                  {t("knowledge.field.confidence")}{" "}
                   {(k.confidence * 100).toFixed(0)}%
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={`/knowledge/${k.id}/edit`}>Edit</Link>
+                  <Link href={`/knowledge/${k.id}/edit`}>{t("common.edit")}</Link>
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => {
-                    if (confirm("Delete?")) remove.mutate(k.id);
+                    if (confirm(t("knowledge.confirmDelete")))
+                      remove.mutate(k.id);
                   }}
                 >
-                  Delete
+                  {t("common.delete")}
                 </Button>
               </div>
             </CardContent>
@@ -124,6 +132,7 @@ export function KnowledgeForm({
     tags?: string[];
   };
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const search = useSearchParams();
   const create = useCreateKnowledge();
@@ -149,7 +158,7 @@ export function KnowledgeForm({
 
   async function generateDraft() {
     if (values.evidenceIds.length === 0) {
-      toast.error("Select supporting evidence first");
+      toast.error(t("knowledge.selectEvidenceFirst"));
       return;
     }
     const result = await draft.mutateAsync(values.evidenceIds);
@@ -159,7 +168,6 @@ export function KnowledgeForm({
       description: result.description,
       confidence: result.confidence,
     }));
-    toast.success(`Draft ready (${result.source})`);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -185,7 +193,7 @@ export function KnowledgeForm({
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>
-          {mode === "create" ? "New knowledge" : "Edit knowledge"}
+          {mode === "create" ? t("knowledge.new") : t("knowledge.edit")}
         </CardTitle>
         <Button
           type="button"
@@ -193,13 +201,13 @@ export function KnowledgeForm({
           disabled={draft.isPending}
           onClick={generateDraft}
         >
-          {draft.isPending ? "Drafting…" : "AI draft from evidence"}
+          {draft.isPending ? t("common.drafting") : t("knowledge.aiDraft")}
         </Button>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label>Title</Label>
+            <Label>{t("common.title")}</Label>
             <Input
               required
               value={values.title}
@@ -209,7 +217,7 @@ export function KnowledgeForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>{t("common.description")}</Label>
             <Textarea
               required
               rows={8}
@@ -220,7 +228,9 @@ export function KnowledgeForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Problem (optional)</Label>
+            <Label>
+              {t("knowledge.field.problem")} ({t("common.optional")})
+            </Label>
             <Select
               value={values.problemId || "none"}
               onValueChange={(v) =>
@@ -231,10 +241,10 @@ export function KnowledgeForm({
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder={t("evidence.selectProblem")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="none">{t("common.noneOption")}</SelectItem>
                 {(
                   (problems.data?.items as Array<{ id: string; title: string }>) ??
                   []
@@ -247,7 +257,9 @@ export function KnowledgeForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Confidence ({values.confidence.toFixed(2)})</Label>
+            <Label>
+              {t("knowledge.field.confidence")} ({values.confidence.toFixed(2)})
+            </Label>
             <Input
               type="range"
               min={0}
@@ -263,7 +275,7 @@ export function KnowledgeForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Supporting evidence</Label>
+            <Label>{t("knowledge.field.evidence")}</Label>
             <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border p-3">
               {evidenceItems.map((e) => (
                 <label key={e.id} className="flex gap-2 text-sm">
@@ -285,16 +297,16 @@ export function KnowledgeForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <Label>{t("common.tags")}</Label>
             <TagInput
               value={values.tags}
               onChange={(tags) => setValues((v) => ({ ...v, tags }))}
             />
           </div>
           <div className="flex gap-2">
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("common.save")}</Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </form>
@@ -304,12 +316,14 @@ export function KnowledgeForm({
 }
 
 export function KnowledgeDetail({ id }: { id: string }) {
+  const { t, locale } = useI18n();
   const { data, isLoading, error } = useKnowledgeItem(id);
   const remove = useDeleteKnowledge();
   const router = useRouter();
 
   if (isLoading) return <ListSkeleton />;
-  if (error || !data) return <EmptyState title="Knowledge not found" />;
+  if (error || !data)
+    return <EmptyState title={t("knowledge.notFound")} />;
 
   const item = data as {
     id: string;
@@ -328,22 +342,22 @@ export function KnowledgeDetail({ id }: { id: string }) {
     <div className="space-y-4">
       <div className="flex gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/knowledge/${id}/edit`}>Edit</Link>
+          <Link href={`/knowledge/${id}/edit`}>{t("common.edit")}</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link href={`/capabilities/new?knowledgeId=${id}`}>
-            Create capability
+            {t("capabilities.new")}
           </Link>
         </Button>
         <Button
           variant="destructive"
           onClick={async () => {
-            if (!confirm("Delete?")) return;
+            if (!confirm(t("knowledge.confirmDelete"))) return;
             await remove.mutateAsync(id);
             router.push("/knowledge");
           }}
         >
-          Delete
+          {t("common.delete")}
         </Button>
       </div>
       <Card>
@@ -354,8 +368,9 @@ export function KnowledgeDetail({ id }: { id: string }) {
           <p className="whitespace-pre-wrap">{item.description}</p>
           <TagList tags={item.tags} />
           <div className="text-muted-foreground">
-            Confidence {(item.confidence * 100).toFixed(0)}% · Updated{" "}
-            {formatDate(item.updatedAt)}
+            {t("knowledge.field.confidence")}{" "}
+            {(item.confidence * 100).toFixed(0)}% · {t("common.updated")}{" "}
+            {formatDate(item.updatedAt, locale)}
             {item.problem ? (
               <>
                 {" "}
@@ -371,7 +386,7 @@ export function KnowledgeDetail({ id }: { id: string }) {
           </div>
           <div className="space-y-2">
             <div className="text-xs uppercase text-muted-foreground">
-              Supporting evidence
+              {t("knowledge.field.evidence")}
             </div>
             {item.evidences.map(({ evidence }) => (
               <Link

@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 import { Toaster } from "sonner";
 import { ClerkProvider } from "@clerk/nextjs";
+import { I18nProvider } from "@/i18n";
 
 const bypass = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
 
@@ -23,12 +24,14 @@ function AppProviders({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={client}>
-        {children}
-        <Toaster richColors closeButton position="top-right" />
-      </QueryClientProvider>
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <QueryClientProvider client={client}>
+          {children}
+          <Toaster richColors closeButton position="top-right" />
+        </QueryClientProvider>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }
 

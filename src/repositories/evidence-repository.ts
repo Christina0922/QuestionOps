@@ -84,6 +84,10 @@ export class EvidenceRepository {
     confidence: number;
     authorId?: string | null;
     tagIds: string[];
+    sourceType?: "MANUAL" | "YOUTUBE_COMMENT";
+    sourceExternalId?: string | null;
+    sourceUrl?: string | null;
+    youtubeCommentId?: string | null;
   }) {
     const evidence = await prisma.evidence.create({
       data: {
@@ -95,6 +99,10 @@ export class EvidenceRepository {
         link: data.link || null,
         confidence: data.confidence,
         authorId: data.authorId ?? null,
+        sourceType: data.sourceType ?? "MANUAL",
+        sourceExternalId: data.sourceExternalId ?? null,
+        sourceUrl: data.sourceUrl ?? null,
+        youtubeCommentId: data.youtubeCommentId ?? null,
         tags: {
           create: data.tagIds.map((tagId) => ({ tagId })),
         },
@@ -102,6 +110,23 @@ export class EvidenceRepository {
       include: evidenceInclude,
     });
     return mapEvidence(evidence);
+  }
+
+  async findBySource(
+    organizationId: string,
+    sourceType: "MANUAL" | "YOUTUBE_COMMENT",
+    sourceExternalId: string,
+  ) {
+    const evidence = await prisma.evidence.findFirst({
+      where: {
+        organizationId,
+        sourceType,
+        sourceExternalId,
+        deletedAt: null,
+      },
+      include: evidenceInclude,
+    });
+    return evidence ? mapEvidence(evidence) : null;
   }
 
   async update(

@@ -30,29 +30,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, truncate } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export function CapabilitiesList() {
+  const { t, locale } = useI18n();
   const { data, isLoading, error } = useCapabilities();
   const remove = useDeleteCapability();
 
   return (
     <div>
       <PageHeader
-        title="Capabilities"
-        description="Repeatable procedures derived from knowledge."
+        title={t("capabilities.title")}
+        description={t("capabilities.description")}
         actionHref="/capabilities/new"
-        actionLabel="New capability"
+        actionLabel={t("capabilities.new")}
       />
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Failed to load" description={(error as Error).message} />
+        <EmptyState
+          title={t("common.failedLoad")}
+          description={(error as Error).message}
+        />
       ) : null}
       {data?.items.length === 0 ? (
         <EmptyState
-          title="No capabilities yet"
+          title={t("capabilities.empty")}
+          description={t("capabilities.emptyHint")}
           action={
             <Button asChild>
-              <Link href="/capabilities/new">Create capability</Link>
+              <Link href="/capabilities/new">{t("capabilities.new")}</Link>
             </Button>
           }
         />
@@ -79,21 +85,24 @@ export function CapabilitiesList() {
                 </p>
                 <TagList tags={c.tags} />
                 <p className="text-xs text-muted-foreground">
-                  Updated {formatDate(c.updatedAt)}
+                  {t("common.updated")} {formatDate(c.updatedAt, locale)}
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={`/capabilities/${c.id}/edit`}>Edit</Link>
+                  <Link href={`/capabilities/${c.id}/edit`}>
+                    {t("common.edit")}
+                  </Link>
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => {
-                    if (confirm("Delete?")) remove.mutate(c.id);
+                    if (confirm(t("capabilities.confirmDelete")))
+                      remove.mutate(c.id);
                   }}
                 >
-                  Delete
+                  {t("common.delete")}
                 </Button>
               </div>
             </CardContent>
@@ -122,6 +131,7 @@ export function CapabilityForm({
     tags?: string[];
   };
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const search = useSearchParams();
   const create = useCreateCapability();
@@ -165,13 +175,13 @@ export function CapabilityForm({
     <Card>
       <CardHeader>
         <CardTitle>
-          {mode === "create" ? "New capability" : "Edit capability"}
+          {mode === "create" ? t("capabilities.new") : t("capabilities.edit")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>{t("common.name")}</Label>
             <Input
               required
               value={values.name}
@@ -181,7 +191,7 @@ export function CapabilityForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>{t("common.description")}</Label>
             <Textarea
               required
               rows={4}
@@ -192,7 +202,7 @@ export function CapabilityForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Standard procedure</Label>
+            <Label>{t("capabilities.field.standardProcedure")}</Label>
             <Textarea
               required
               rows={6}
@@ -206,7 +216,10 @@ export function CapabilityForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Checklist (one item per line)</Label>
+            <Label>
+              {t("capabilities.field.checklist")} (
+              {t("capabilities.field.checklistHint")})
+            </Label>
             <Textarea
               rows={5}
               value={checklistText}
@@ -214,7 +227,7 @@ export function CapabilityForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Expected outcome</Label>
+            <Label>{t("capabilities.field.expectedOutcome")}</Label>
             <Textarea
               required
               rows={3}
@@ -229,7 +242,9 @@ export function CapabilityForm({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Knowledge (optional)</Label>
+              <Label>
+                {t("capabilities.field.knowledge")} ({t("common.optional")})
+              </Label>
               <Select
                 value={values.knowledgeId || "none"}
                 onValueChange={(v) =>
@@ -243,7 +258,7 @@ export function CapabilityForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("common.noneOption")}</SelectItem>
                   {(
                     (knowledge.data?.items as Array<{
                       id: string;
@@ -258,7 +273,9 @@ export function CapabilityForm({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Problem (optional)</Label>
+              <Label>
+                {t("capabilities.field.problem")} ({t("common.optional")})
+              </Label>
               <Select
                 value={values.problemId || "none"}
                 onValueChange={(v) =>
@@ -272,7 +289,7 @@ export function CapabilityForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("common.noneOption")}</SelectItem>
                   {(
                     (problems.data?.items as Array<{
                       id: string;
@@ -288,16 +305,16 @@ export function CapabilityForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <Label>{t("common.tags")}</Label>
             <TagInput
               value={values.tags}
               onChange={(tags) => setValues((v) => ({ ...v, tags }))}
             />
           </div>
           <div className="flex gap-2">
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("common.save")}</Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </form>
@@ -307,12 +324,14 @@ export function CapabilityForm({
 }
 
 export function CapabilityDetail({ id }: { id: string }) {
+  const { t, locale } = useI18n();
   const { data, isLoading, error } = useCapability(id);
   const remove = useDeleteCapability();
   const router = useRouter();
 
   if (isLoading) return <ListSkeleton />;
-  if (error || !data) return <EmptyState title="Capability not found" />;
+  if (error || !data)
+    return <EmptyState title={t("capabilities.notFound")} />;
 
   const item = data as {
     id: string;
@@ -331,17 +350,17 @@ export function CapabilityDetail({ id }: { id: string }) {
     <div className="space-y-4">
       <div className="flex gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/capabilities/${id}/edit`}>Edit</Link>
+          <Link href={`/capabilities/${id}/edit`}>{t("common.edit")}</Link>
         </Button>
         <Button
           variant="destructive"
           onClick={async () => {
-            if (!confirm("Delete?")) return;
+            if (!confirm(t("capabilities.confirmDelete"))) return;
             await remove.mutateAsync(id);
             router.push("/capabilities");
           }}
         >
-          Delete
+          {t("common.delete")}
         </Button>
       </div>
       <Card>
@@ -352,13 +371,13 @@ export function CapabilityDetail({ id }: { id: string }) {
           <p>{item.description}</p>
           <div>
             <div className="mb-1 text-xs uppercase text-muted-foreground">
-              Standard procedure
+              {t("capabilities.field.standardProcedure")}
             </div>
             <p className="whitespace-pre-wrap">{item.standardProcedure}</p>
           </div>
           <div>
             <div className="mb-1 text-xs uppercase text-muted-foreground">
-              Checklist
+              {t("capabilities.field.checklist")}
             </div>
             <ul className="list-disc space-y-1 pl-5">
               {item.checklist.map((step, i) => (
@@ -368,17 +387,17 @@ export function CapabilityDetail({ id }: { id: string }) {
           </div>
           <div>
             <div className="mb-1 text-xs uppercase text-muted-foreground">
-              Expected outcome
+              {t("capabilities.field.expectedOutcome")}
             </div>
             <p>{item.expectedOutcome}</p>
           </div>
           <TagList tags={item.tags} />
           <div className="text-muted-foreground">
-            Updated {formatDate(item.updatedAt)}
+            {t("common.updated")} {formatDate(item.updatedAt, locale)}
             {item.knowledge ? (
               <>
                 {" "}
-                · Knowledge{" "}
+                · {t("entity.knowledge")}{" "}
                 <Link
                   className="text-primary underline"
                   href={`/knowledge/${item.knowledge.id}`}

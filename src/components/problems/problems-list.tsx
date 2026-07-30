@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, truncate } from "@/lib/utils";
 import type { ProblemPriority, ProblemStatus } from "@/types";
+import { useI18n } from "@/i18n";
 
 type ProblemRow = {
   id: string;
@@ -33,33 +34,37 @@ export function ProblemsList() {
   const [q, setQ] = useState("");
   const { data, isLoading, error } = useProblems({ q: q || undefined });
   const remove = useDeleteProblem();
+  const { t, locale } = useI18n();
 
   return (
     <div>
       <PageHeader
-        title="Problems"
-        description="Customer problems under investigation."
+        title={t("problems.title")}
+        description={t("problems.description")}
         actionHref="/problems/new"
-        actionLabel="New problem"
+        actionLabel={t("problems.new")}
       />
       <div className="mb-4">
         <Input
-          placeholder="Filter problems…"
+          placeholder={t("problems.filter")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Failed to load" description={(error as Error).message} />
+        <EmptyState
+          title={t("common.failedLoad")}
+          description={(error as Error).message}
+        />
       ) : null}
       {data && data.items.length === 0 ? (
         <EmptyState
-          title="No problems yet"
-          description="Create a customer problem to start collecting evidence."
+          title={t("problems.empty")}
+          description={t("problems.emptyHint")}
           action={
             <Button asChild>
-              <Link href="/problems/new">New problem</Link>
+              <Link href="/problems/new">{t("problems.new")}</Link>
             </Button>
           }
         />
@@ -84,24 +89,31 @@ export function ProblemsList() {
                   <TagList tags={problem.tags} />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Updated {formatDate(problem.updatedAt)}
+                  {t("common.updated")} {formatDate(problem.updatedAt, locale)}
                   {problem._count
-                    ? ` · ${problem._count.evidences} evidence · ${problem._count.knowledge} knowledge · ${problem._count.capabilities} capabilities`
+                    ? ` · ${t("problems.counts", {
+                        evidences: problem._count.evidences,
+                        knowledge: problem._count.knowledge,
+                        capabilities: problem._count.capabilities,
+                      })}`
                     : null}
                 </div>
               </div>
               <div className="flex shrink-0 gap-2">
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/problems/${problem.id}/edit`}>Edit</Link>
+                  <Link href={`/problems/${problem.id}/edit`}>
+                    {t("common.edit")}
+                  </Link>
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={() => {
-                    if (confirm("Delete this problem?")) remove.mutate(problem.id);
+                    if (confirm(t("problems.confirmDelete")))
+                      remove.mutate(problem.id);
                   }}
                 >
-                  Delete
+                  {t("common.delete")}
                 </Button>
               </div>
             </CardContent>

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { PaginatedResult } from "@/types";
+import { tStatic } from "@/i18n";
 import { toast } from "sonner";
 
 export function useClusters(params: Record<string, string | number | undefined> = {}) {
@@ -35,7 +36,7 @@ export function useCreateCluster() {
       apiFetch("/api/clusters", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clusters"] });
-      toast.success("Cluster created");
+      toast.success(tStatic("clusters.created"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -51,7 +52,7 @@ export function useUpdateCluster(id: string) {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clusters"] });
-      toast.success("Cluster updated");
+      toast.success(tStatic("clusters.updated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -64,7 +65,7 @@ export function useDeleteCluster() {
       apiFetch(`/api/clusters/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clusters"] });
-      toast.success("Cluster deleted");
+      toast.success(tStatic("clusters.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });

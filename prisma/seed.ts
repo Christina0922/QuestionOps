@@ -55,6 +55,9 @@ async function main() {
   console.log("Seeding QuestionOps…");
 
   await prisma.activity.deleteMany();
+  await prisma.youTubeSyncJob.deleteMany();
+  await prisma.youTubeChannel.deleteMany();
+  await prisma.youTubeConnection.deleteMany();
   await prisma.capabilityTag.deleteMany();
   await prisma.knowledgeTag.deleteMany();
   await prisma.evidenceTag.deleteMany();
@@ -276,6 +279,36 @@ async function main() {
         organizationId: org.id,
         userId: user.id,
         ...sample,
+      },
+    });
+  }
+
+  // Optional mock YouTube connection for UI testing without Google OAuth
+  if (process.env.YOUTUBE_SEED_MOCK === "true") {
+    const connection = await prisma.youTubeConnection.create({
+      data: {
+        organizationId: org.id,
+        userId: user.id,
+        googleAccountId: "seed-google",
+        googleAccountEmail: "creator@example.com",
+        status: "CONNECTED",
+        scope: "mock",
+        lastConnectedAt: new Date(),
+      },
+    });
+    await prisma.youTubeChannel.create({
+      data: {
+        organizationId: org.id,
+        connectionId: connection.id,
+        youtubeChannelId: "UC_SEED_CHANNEL",
+        title: "Seed Demo Channel",
+        description: "Mock channel from seed",
+        thumbnailUrl: "https://via.placeholder.com/88",
+        customUrl: "@seeddemo",
+        subscriberCount: 10000,
+        videoCount: 120,
+        viewCount: BigInt(1_000_000),
+        lastSyncedAt: new Date(),
       },
     });
   }

@@ -30,8 +30,10 @@ import {
 } from "@/components/ui/select";
 import { formatDate, truncate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/i18n";
 
 export function EvidenceList() {
+  const { t, locale } = useI18n();
   const [q, setQ] = useState("");
   const { data, isLoading, error } = useEvidence({ q: q || undefined });
   const remove = useDeleteEvidence();
@@ -39,27 +41,31 @@ export function EvidenceList() {
   return (
     <div>
       <PageHeader
-        title="Evidence"
-        description="Observations linked to customer problems."
+        title={t("evidence.title")}
+        description={t("evidence.description")}
         actionHref="/evidence/new"
-        actionLabel="New evidence"
+        actionLabel={t("evidence.new")}
       />
       <Input
         className="mb-4"
-        placeholder="Filter evidence…"
+        placeholder={t("evidence.filter")}
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Failed to load" description={(error as Error).message} />
+        <EmptyState
+          title={t("common.failedLoad")}
+          description={(error as Error).message}
+        />
       ) : null}
       {data?.items.length === 0 ? (
         <EmptyState
-          title="No evidence yet"
+          title={t("evidence.empty")}
+          description={t("evidence.emptyHint")}
           action={
             <Button asChild>
-              <Link href="/evidence/new">Add evidence</Link>
+              <Link href="/evidence/new">{t("problems.addEvidence")}</Link>
             </Button>
           }
         />
@@ -91,25 +97,29 @@ export function EvidenceList() {
                       {item.problem.title}
                     </Link>
                   ) : (
-                    "No problem"
+                    t("evidence.noProblem")
                   )}{" "}
-                  · {formatDate(item.createdAt)} · conf{" "}
+                  · {formatDate(item.createdAt, locale)} ·{" "}
+                  {t("evidence.field.confidence")}{" "}
                   {(item.confidence * 100).toFixed(0)}%
                 </div>
                 <TagList tags={item.tags} />
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={`/evidence/${item.id}/edit`}>Edit</Link>
+                  <Link href={`/evidence/${item.id}/edit`}>
+                    {t("common.edit")}
+                  </Link>
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => {
-                    if (confirm("Delete this evidence?")) remove.mutate(item.id);
+                    if (confirm(t("evidence.confirmDelete")))
+                      remove.mutate(item.id);
                   }}
                 >
-                  Delete
+                  {t("common.delete")}
                 </Button>
               </div>
             </CardContent>
@@ -137,6 +147,7 @@ export function EvidenceForm({
     tags?: string[];
   };
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const search = useSearchParams();
   const problems = useProblems({ pageSize: 100 });
@@ -173,13 +184,13 @@ export function EvidenceForm({
     <Card>
       <CardHeader>
         <CardTitle>
-          {mode === "create" ? "New evidence" : "Edit evidence"}
+          {mode === "create" ? t("evidence.new") : t("evidence.edit")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label>Problem</Label>
+            <Label>{t("evidence.field.problem")}</Label>
             <Select
               value={values.problemId}
               onValueChange={(problemId) =>
@@ -187,7 +198,7 @@ export function EvidenceForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select problem" />
+                <SelectValue placeholder={t("evidence.selectProblem")} />
               </SelectTrigger>
               <SelectContent>
                 {(
@@ -202,7 +213,7 @@ export function EvidenceForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Observation</Label>
+            <Label>{t("evidence.field.observation")}</Label>
             <Textarea
               required
               rows={5}
@@ -213,7 +224,7 @@ export function EvidenceForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Transcript</Label>
+            <Label>{t("evidence.field.transcript")}</Label>
             <Textarea
               rows={4}
               value={values.transcript}
@@ -224,7 +235,7 @@ export function EvidenceForm({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Screenshot URL</Label>
+              <Label>{t("evidence.field.screenshotUrl")}</Label>
               <Input
                 value={values.screenshotUrl}
                 onChange={(e) =>
@@ -233,7 +244,7 @@ export function EvidenceForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>Link</Label>
+              <Label>{t("evidence.field.link")}</Label>
               <Input
                 value={values.link}
                 onChange={(e) =>
@@ -243,7 +254,9 @@ export function EvidenceForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Confidence ({values.confidence.toFixed(2)})</Label>
+            <Label>
+              {t("evidence.field.confidence")} ({values.confidence.toFixed(2)})
+            </Label>
             <Input
               type="range"
               min={0}
@@ -259,7 +272,7 @@ export function EvidenceForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <Label>{t("common.tags")}</Label>
             <TagInput
               value={values.tags}
               onChange={(tags) => setValues((v) => ({ ...v, tags }))}
@@ -267,10 +280,12 @@ export function EvidenceForm({
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={create.isPending || update.isPending}>
-              Save
+              {create.isPending || update.isPending
+                ? t("common.saving")
+                : t("common.save")}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </form>
@@ -280,13 +295,14 @@ export function EvidenceForm({
 }
 
 export function EvidenceDetail({ id }: { id: string }) {
+  const { t, locale } = useI18n();
   const { data, isLoading, error } = useEvidenceItem(id);
   const remove = useDeleteEvidence();
   const router = useRouter();
 
   if (isLoading) return <ListSkeleton />;
   if (error || !data) {
-    return <EmptyState title="Evidence not found" />;
+    return <EmptyState title={t("evidence.notFound")} />;
   }
 
   const item = data as {
@@ -306,29 +322,31 @@ export function EvidenceDetail({ id }: { id: string }) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/evidence/${id}/edit`}>Edit</Link>
+          <Link href={`/evidence/${id}/edit`}>{t("common.edit")}</Link>
         </Button>
         <Button
           variant="destructive"
           onClick={async () => {
-            if (!confirm("Delete?")) return;
+            if (!confirm(t("evidence.confirmDelete"))) return;
             await remove.mutateAsync(id);
             router.push("/evidence");
           }}
         >
-          Delete
+          {t("common.delete")}
         </Button>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Observation</CardTitle>
+          <CardTitle className="text-base">
+            {t("evidence.field.observation")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p className="whitespace-pre-wrap">{item.observation}</p>
           {item.transcript ? (
             <div>
               <div className="mb-1 text-xs uppercase text-muted-foreground">
-                Transcript
+                {t("evidence.field.transcript")}
               </div>
               <p className="whitespace-pre-wrap text-muted-foreground">
                 {item.transcript}
@@ -337,7 +355,7 @@ export function EvidenceDetail({ id }: { id: string }) {
           ) : null}
           <div className="grid gap-2 sm:grid-cols-2 text-muted-foreground">
             <div>
-              Problem:{" "}
+              {t("evidence.field.problem")}:{" "}
               {item.problem ? (
                 <Link
                   className="text-primary underline"
@@ -346,12 +364,20 @@ export function EvidenceDetail({ id }: { id: string }) {
                   {item.problem.title}
                 </Link>
               ) : (
-                "—"
+                t("common.none")
               )}
             </div>
-            <div>Confidence: {(item.confidence * 100).toFixed(0)}%</div>
-            <div>Author: {item.author?.name || item.author?.email || "—"}</div>
-            <div>Created: {formatDate(item.createdAt)}</div>
+            <div>
+              {t("evidence.field.confidence")}:{" "}
+              {(item.confidence * 100).toFixed(0)}%
+            </div>
+            <div>
+              {t("evidence.field.author")}:{" "}
+              {item.author?.name || item.author?.email || t("common.none")}
+            </div>
+            <div>
+              {t("common.created")}: {formatDate(item.createdAt, locale)}
+            </div>
           </div>
           <TagList tags={item.tags} />
           {item.link ? (
@@ -361,7 +387,7 @@ export function EvidenceDetail({ id }: { id: string }) {
               target="_blank"
               rel="noreferrer"
             >
-              External link
+              {t("evidence.externalLink")}
             </a>
           ) : null}
         </CardContent>

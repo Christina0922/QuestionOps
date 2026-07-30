@@ -5,22 +5,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 export function TagInput({
   value,
   onChange,
-  placeholder = "Add tag and press Enter",
+  placeholder,
 }: {
   value: string[];
   onChange: (tags: string[]) => void;
   placeholder?: string;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState("");
+  const resolvedPlaceholder = placeholder ?? t("tags.placeholder");
 
   function addTag(raw: string) {
     const tag = raw.trim();
     if (!tag) return;
-    if (value.some((t) => t.toLowerCase() === tag.toLowerCase())) {
+    if (value.some((x) => x.toLowerCase() === tag.toLowerCase())) {
       setDraft("");
       return;
     }
@@ -36,7 +39,7 @@ export function TagInput({
             {tag}
             <button
               type="button"
-              onClick={() => onChange(value.filter((t) => t !== tag))}
+              onClick={() => onChange(value.filter((x) => x !== tag))}
               className="opacity-70 hover:opacity-100"
             >
               <X className="h-3 w-3" />
@@ -47,7 +50,7 @@ export function TagInput({
       <div className="flex gap-2">
         <Input
           value={draft}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -57,7 +60,7 @@ export function TagInput({
           }}
         />
         <Button type="button" variant="outline" onClick={() => addTag(draft)}>
-          Add
+          {t("common.add")}
         </Button>
       </div>
     </div>

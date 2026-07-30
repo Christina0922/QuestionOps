@@ -30,29 +30,35 @@ import {
 } from "@/components/ui/select";
 import { formatDate, truncate } from "@/lib/utils";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n";
 
 export function ClustersList() {
+  const { t } = useI18n();
   const { data, isLoading, error } = useClusters();
   const remove = useDeleteCluster();
 
   return (
     <div>
       <PageHeader
-        title="Clusters"
-        description="Group related evidence into themes."
+        title={t("clusters.title")}
+        description={t("clusters.description")}
         actionHref="/clusters/new"
-        actionLabel="New cluster"
+        actionLabel={t("clusters.new")}
       />
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
-        <EmptyState title="Failed to load" description={(error as Error).message} />
+        <EmptyState
+          title={t("common.failedLoad")}
+          description={(error as Error).message}
+        />
       ) : null}
       {data?.items.length === 0 ? (
         <EmptyState
-          title="No clusters yet"
+          title={t("clusters.empty")}
+          description={t("clusters.emptyHint")}
           action={
             <Button asChild>
-              <Link href="/clusters/new">Create cluster</Link>
+              <Link href="/clusters/new">{t("clusters.new")}</Link>
             </Button>
           }
         />
@@ -78,22 +84,25 @@ export function ClustersList() {
                   {truncate(c.summary || "", 140)}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {c._count?.evidences ?? 0} evidence
+                  {t("clusters.evidenceCount", {
+                    count: c._count?.evidences ?? 0,
+                  })}
                   {c.problem ? ` · ${c.problem.title}` : ""}
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={`/clusters/${c.id}/edit`}>Edit</Link>
+                  <Link href={`/clusters/${c.id}/edit`}>{t("common.edit")}</Link>
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => {
-                    if (confirm("Delete cluster?")) remove.mutate(c.id);
+                    if (confirm(t("clusters.confirmDelete")))
+                      remove.mutate(c.id);
                   }}
                 >
-                  Delete
+                  {t("common.delete")}
                 </Button>
               </div>
             </CardContent>
@@ -118,6 +127,7 @@ export function ClusterForm({
     evidenceIds?: string[];
   };
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const search = useSearchParams();
   const create = useCreateCluster();
@@ -155,7 +165,7 @@ export function ClusterForm({
 
   async function draftFromAi() {
     if (values.evidenceIds.length === 0) {
-      toast.error("Select evidence first");
+      toast.error(t("clusters.selectEvidenceFirst"));
       return;
     }
     setDrafting(true);
@@ -172,7 +182,7 @@ export function ClusterForm({
         name: draft.name,
         summary: draft.summary,
       }));
-      toast.success("Draft generated");
+      toast.success(t("clusters.draftApplied"));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -201,7 +211,7 @@ export function ClusterForm({
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>
-          {mode === "create" ? "New cluster" : "Edit cluster"}
+          {mode === "create" ? t("clusters.new") : t("clusters.edit")}
         </CardTitle>
         <Button
           type="button"
@@ -209,13 +219,13 @@ export function ClusterForm({
           disabled={drafting}
           onClick={draftFromAi}
         >
-          {drafting ? "Drafting…" : "AI draft"}
+          {drafting ? t("common.drafting") : t("clusters.aiDraft")}
         </Button>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>{t("common.name")}</Label>
             <Input
               required
               value={values.name}
@@ -225,7 +235,7 @@ export function ClusterForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Summary</Label>
+            <Label>{t("common.summary")}</Label>
             <Textarea
               rows={4}
               value={values.summary}
@@ -235,7 +245,9 @@ export function ClusterForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Problem (optional)</Label>
+            <Label>
+              {t("evidence.field.problem")} ({t("common.optional")})
+            </Label>
             <Select
               value={values.problemId || "none"}
               onValueChange={(v) =>
@@ -246,10 +258,10 @@ export function ClusterForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select problem" />
+                <SelectValue placeholder={t("evidence.selectProblem")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="none">{t("common.noneOption")}</SelectItem>
                 {(
                   (problems.data?.items as Array<{ id: string; title: string }>) ??
                   []
@@ -262,7 +274,7 @@ export function ClusterForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Evidence</Label>
+            <Label>{t("clusters.field.evidenceIds")}</Label>
             <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border p-3">
               {evidenceItems.map((e) => (
                 <label
@@ -281,9 +293,9 @@ export function ClusterForm({
             </div>
           </div>
           <div className="flex gap-2">
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("common.save")}</Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </form>
@@ -293,12 +305,14 @@ export function ClusterForm({
 }
 
 export function ClusterDetail({ id }: { id: string }) {
+  const { t, locale } = useI18n();
   const { data, isLoading, error } = useCluster(id);
   const remove = useDeleteCluster();
   const router = useRouter();
 
   if (isLoading) return <ListSkeleton />;
-  if (error || !data) return <EmptyState title="Cluster not found" />;
+  if (error || !data)
+    return <EmptyState title={t("clusters.notFound")} />;
 
   const cluster = data as {
     id: string;
@@ -320,17 +334,17 @@ export function ClusterDetail({ id }: { id: string }) {
     <div className="space-y-4">
       <div className="flex gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/clusters/${id}/edit`}>Edit</Link>
+          <Link href={`/clusters/${id}/edit`}>{t("common.edit")}</Link>
         </Button>
         <Button
           variant="destructive"
           onClick={async () => {
-            if (!confirm("Delete?")) return;
+            if (!confirm(t("clusters.confirmDelete"))) return;
             await remove.mutateAsync(id);
             router.push("/clusters");
           }}
         >
-          Delete
+          {t("common.delete")}
         </Button>
       </div>
       <Card>
@@ -339,14 +353,14 @@ export function ClusterDetail({ id }: { id: string }) {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p className="whitespace-pre-wrap text-muted-foreground">
-            {cluster.summary || "No summary"}
+            {cluster.summary || t("clusters.noSummary")}
           </p>
           <div className="text-muted-foreground">
-            Updated {formatDate(cluster.updatedAt)}
+            {t("common.updated")} {formatDate(cluster.updatedAt, locale)}
             {cluster.problem ? (
               <>
                 {" "}
-                · Problem{" "}
+                · {t("entity.problem")}{" "}
                 <Link
                   className="text-primary underline"
                   href={`/problems/${cluster.problem.id}`}

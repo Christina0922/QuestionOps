@@ -12,39 +12,52 @@ import {
   Lightbulb,
   Menu,
   Search,
+  Settings,
   Wrench,
   X,
+  Youtube,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n";
+import type { MessageKey } from "@/i18n";
 
-const nav = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/problems", label: "Problems", icon: CircleDot },
-  { href: "/evidence", label: "Evidence", icon: FileSearch },
-  { href: "/clusters", label: "Clusters", icon: Boxes },
-  { href: "/knowledge", label: "Knowledge", icon: BookOpen },
-  { href: "/capabilities", label: "Capabilities", icon: Wrench },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/activity", label: "Activity", icon: Activity },
+const nav: Array<{ href: string; labelKey: MessageKey; icon: typeof LayoutDashboard }> = [
+  { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/problems", labelKey: "nav.problems", icon: CircleDot },
+  { href: "/evidence", labelKey: "nav.evidence", icon: FileSearch },
+  { href: "/clusters", labelKey: "nav.clusters", icon: Boxes },
+  { href: "/knowledge", labelKey: "nav.knowledge", icon: BookOpen },
+  { href: "/capabilities", labelKey: "nav.capabilities", icon: Wrench },
+  { href: "/youtube/videos", labelKey: "nav.youtubeVideos", icon: Youtube },
+  { href: "/settings/integrations/youtube", labelKey: "nav.youtube", icon: Settings },
+  { href: "/search", labelKey: "nav.search", icon: Search },
+  { href: "/activity", labelKey: "nav.activity", icon: Activity },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
 
   const content = (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-sidebar-border px-4 py-4">
+      <Link
+        href="/"
+        onClick={() => setOpen(false)}
+        className="flex items-center gap-2 border-b border-sidebar-border px-4 py-4 transition-colors hover:bg-accent/40"
+      >
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Lightbulb className="h-4 w-4" />
         </div>
         <div>
-          <div className="text-sm font-semibold tracking-tight">QuestionOps</div>
-          <div className="text-xs text-muted-foreground">Evidence → Capability</div>
+          <div className="text-sm font-semibold tracking-tight">
+            {t("app.name")}
+          </div>
+          <div className="text-xs text-muted-foreground">{t("app.tagline")}</div>
         </div>
-      </div>
+      </Link>
       <nav className="flex-1 space-y-1 p-3">
         {nav.map((item) => {
           const active =
@@ -65,7 +78,7 @@ export function AppSidebar() {
               )}
             >
               <Icon className="h-4 w-4" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
@@ -84,7 +97,7 @@ export function AppSidebar() {
           size="icon"
           className="fixed left-3 top-3 z-40"
           onClick={() => setOpen(true)}
-          aria-label="Open menu"
+          aria-label={t("nav.openMenu")}
         >
           <Menu className="h-5 w-5" />
         </Button>

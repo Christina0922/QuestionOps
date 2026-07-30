@@ -43,6 +43,7 @@ model User {
   evidencesAuthored    Evidence[]           @relation("EvidenceAuthor")
   knowledgeAuthored    Knowledge[]          @relation("KnowledgeAuthor")
   capabilitiesAuthored Capability[]         @relation("CapabilityAuthor")
+  youtubeConnections   YouTubeConnection[]
 
   @@index([deletedAt])
 }
@@ -56,14 +57,24 @@ model Organization {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  members      OrganizationMember[]
-  problems     Problem[]
-  evidences    Evidence[]
-  clusters     Cluster[]
-  knowledge    Knowledge[]
-  capabilities Capability[]
-  tags         Tag[]
-  activities   Activity[]
+  members             OrganizationMember[]
+  problems            Problem[]
+  evidences           Evidence[]
+  clusters            Cluster[]
+  knowledge           Knowledge[]
+  capabilities        Capability[]
+  tags                Tag[]
+  activities          Activity[]
+  youtubeConnections  YouTubeConnection[]
+  youtubeChannels     YouTubeChannel[]
+  youtubeVideos       YouTubeVideo[]
+  youtubeComments     YouTubeComment[]
+  youtubeSyncJobs      YouTubeSyncJob[]
+  youtubeVideoAnalyses YouTubeVideoAnalysis[]
+  youtubeAnalysisClusters YouTubeAnalysisCluster[]
+  youtubeKnowledgeCandidates YouTubeKnowledgeCandidate[]
+  youtubeCapabilityCandidates YouTubeCapabilityCandidate[]
+  youtubeQuotaEvents YouTubeApiQuotaEvent[]
 
   @@index([deletedAt])
 }
@@ -110,30 +121,42 @@ model Problem {
   @@index([title])
 }
 
+enum EvidenceSourceType {
+  MANUAL
+  YOUTUBE_COMMENT
+}
+
 model Evidence {
-  id             String    @id @default(cuid())
-  organizationId String
-  problemId      String
-  observation    String
-  transcript     String?
-  screenshotUrl  String?
-  link           String?
-  authorId       String?
-  confidence     Float     @default(0.5)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
+  id                 String             @id @default(cuid())
+  organizationId     String
+  problemId          String
+  observation        String
+  transcript         String?
+  screenshotUrl      String?
+  link               String?
+  authorId           String?
+  confidence         Float              @default(0.5)
+  sourceType         EvidenceSourceType @default(MANUAL)
+  sourceExternalId   String?
+  sourceUrl          String?
+  youtubeCommentId   String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
 
   organization      Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   problem           Problem              @relation(fields: [problemId], references: [id], onDelete: Cascade)
   author            User?                @relation("EvidenceAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  youtubeComment    YouTubeComment?      @relation(fields: [youtubeCommentId], references: [id], onDelete: SetNull)
   clusters          ClusterEvidence[]
   knowledgeLinks    KnowledgeEvidence[]
   tags              EvidenceTag[]
 
+  @@unique([organizationId, sourceType, sourceExternalId])
   @@index([organizationId, deletedAt])
   @@index([problemId, deletedAt])
   @@index([organizationId, createdAt])
+  @@index([youtubeCommentId])
 }
 
 model Cluster {
@@ -320,4 +343,370 @@ model Activity {
   @@index([organizationId, createdAt])
   @@index([entityType, entityId])
   @@index([userId])
+}
+
+enum YouTubeConnectionStatus {
+  CONNECTED
+  REAUTH_REQUIRED
+  REVOKED
+  ERROR
+  DISCONNECTED
+}
+
+enum YouTubeSyncJobType {
+  CHANNEL_SYNC
+  VIDEO_SYNC
+  COMMENT_IMPORT
+  COMMENT_INCREMENTAL_SYNC
+  ANALYSIS
+}
+
+enum YouTubeSyncJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+  CANCELLED
+}
+
+enum YouTubeVideoSyncStatus {
+  NEVER
+  PENDING
+  SYNCING
+  SYNCED
+  PARTIAL
+  ERROR
+  COMMENTS_DISABLED
+}
+
+model YouTubeConnection {
+  id                    String                   @id @default(cuid())
+  organizationId        String
+  userId                String
+  googleAccountId       String?
+  googleAccountEmail    String?
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  accessTokenExpiresAt  DateTime?
+  scope                 String?
+  status                YouTubeConnectionStatus  @default(DISCONNECTED)
+  lastErrorCode         String?
+  lastErrorMessage      String?
+  lastConnectedAt       DateTime?
+  lastRefreshedAt       DateTime?
+  revokedAt             DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channels     YouTubeChannel[]
+  videos       YouTubeVideo[]
+  syncJobs     YouTubeSyncJob[]
+
+  @@unique([organizationId])
+  @@index([userId])
+  @@index([status])
+}
+
+model YouTubeChannel {
+  id                String    @id @default(cuid())
+  organizationId    String
+  connectionId      String
+  youtubeChannelId  String
+  title             String
+  description       String?
+  thumbnailUrl      String?
+  customUrl         String?
+  publishedAt       DateTime?
+  subscriberCount   Int?
+  videoCount        Int?
+  viewCount         BigInt?
+  uploadsPlaylistId String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connection   YouTubeConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  videos       YouTubeVideo[]
+  syncJobs     YouTubeSyncJob[]
+  comments     YouTubeComment[]
+
+  @@unique([organizationId, youtubeChannelId])
+  @@index([connectionId])
+  @@index([organizationId, deletedAt])
+}
+
+model YouTubeVideo {
+  id                  String                 @id @default(cuid())
+  organizationId      String
+  connectionId        String?
+  channelId           String
+  youtubeVideoId      String
+  title               String
+  description         String?
+  thumbnailUrl        String?
+  publishedAt         DateTime?
+  duration            String?
+  viewCount           BigInt?
+  likeCount           Int?
+  commentCount        Int?
+  commentsEnabled     Boolean                @default(true)
+  lastCommentSyncedAt DateTime?
+  syncStatus          YouTubeVideoSyncStatus @default(NEVER)
+  analysisStatus      String                 @default("NONE")
+  source              String                 @default("CHANNEL") // CHANNEL | URL
+  lastErrorCode       String?
+  lastErrorMessage    String?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  deletedAt           DateTime?
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connection   YouTubeConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  channel      YouTubeChannel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  syncJobs     YouTubeSyncJob[]
+  comments     YouTubeComment[]
+  analyses     YouTubeVideoAnalysis[]
+
+  @@unique([organizationId, youtubeVideoId])
+  @@index([channelId, deletedAt])
+  @@index([organizationId, syncStatus])
+  @@index([organizationId, publishedAt])
+  @@index([organizationId, commentCount])
+  @@index([title])
+}
+
+model YouTubeSyncJob {
+  id              String                @id @default(cuid())
+  organizationId  String
+  connectionId    String?
+  channelId       String?
+  videoId         String?
+  jobType         YouTubeSyncJobType
+  status          YouTubeSyncJobStatus  @default(PENDING)
+  totalExpected   Int?
+  processedCount  Int                   @default(0)
+  createdCount    Int                   @default(0)
+  updatedCount    Int                   @default(0)
+  skippedCount    Int                   @default(0)
+  failedCount     Int                   @default(0)
+  nextPageToken   String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  errorCode       String?
+  errorMessage    String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connection   YouTubeConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  channel      YouTubeChannel?    @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  video        YouTubeVideo?      @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([status])
+  @@index([jobType])
+  @@index([videoId])
+}
+
+model YouTubeComment {
+  id                     String                  @id @default(cuid())
+  organizationId         String
+  videoId                String
+  channelId              String?
+  youtubeCommentId       String
+  parentYoutubeCommentId String?
+  authorDisplayName      String?
+  authorChannelId        String?
+  authorProfileImageUrl  String?
+  textOriginal           String
+  textDisplay            String?
+  likeCount              Int                     @default(0)
+  replyCount             Int                     @default(0)
+  publishedAt            DateTime?
+  updatedAtSource        DateTime?
+  moderationStatus       String?
+  isTopLevel             Boolean                 @default(true)
+  sourceUrl              String?
+  rawPayload             Json?
+  detectedLanguage       String?
+  translatedTextKo       String?
+  translatedTextEn       String?
+  translationStatus      String?
+  classification         CommentClassification?
+  sentiment              CommentSentiment?
+  urgency                Int?
+  classificationConfidence Float?
+  contentHash            String?
+  classifiedAt           DateTime?
+  analysisClusterId      String?
+  importedAt             DateTime                @default(now())
+  lastSeenAt             DateTime                @default(now())
+  sourceUnavailableAt    DateTime?
+  deletedAt              DateTime?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  video           YouTubeVideo            @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  channel         YouTubeChannel?         @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  analysisCluster YouTubeAnalysisCluster? @relation(fields: [analysisClusterId], references: [id], onDelete: SetNull)
+  evidences       Evidence[]
+
+  @@unique([organizationId, youtubeCommentId])
+  @@index([videoId, deletedAt])
+  @@index([organizationId, publishedAt])
+  @@index([parentYoutubeCommentId])
+  @@index([detectedLanguage])
+  @@index([classification])
+  @@index([analysisClusterId])
+}
+
+enum CommentClassification {
+  QUESTION
+  COMPLAINT
+  BUG_REPORT
+  REQUEST
+  SUGGESTION
+  PRAISE
+  CONFUSION
+  PURCHASE_INTENT
+  CHURN_RISK
+  SPAM
+  OTHER
+  UNKNOWN
+}
+
+enum CommentSentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  MIXED
+  UNKNOWN
+}
+
+enum AiReviewStatus {
+  AI_GENERATED
+  USER_REVIEWED
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+model YouTubeVideoAnalysis {
+  id              String   @id @default(cuid())
+  organizationId  String
+  videoId         String
+  jobId           String?
+  status          String   @default("PENDING")
+  commentLimit    Int      @default(100)
+  processedCount  Int      @default(0)
+  clusterCount    Int      @default(0)
+  errorMessage    String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  video        YouTubeVideo                 @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  clusters     YouTubeAnalysisCluster[]
+  knowledgeCandidates YouTubeKnowledgeCandidate[]
+  capabilityCandidates YouTubeCapabilityCandidate[]
+
+  @@index([organizationId, videoId, createdAt])
+  @@index([status])
+}
+
+model YouTubeAnalysisCluster {
+  id                    String         @id @default(cuid())
+  organizationId        String
+  analysisId            String
+  videoId               String
+  name                  String
+  summary               String?
+  supportingCommentIds  Json
+  primaryClassification String?
+  reviewStatus          AiReviewStatus @default(AI_GENERATED)
+  approvedClusterId     String?
+  problemId             String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  analysis     YouTubeVideoAnalysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  comments     YouTubeComment[]
+  knowledgeCandidates YouTubeKnowledgeCandidate[]
+
+  @@index([analysisId])
+  @@index([videoId, reviewStatus])
+}
+
+model YouTubeKnowledgeCandidate {
+  id                   String         @id @default(cuid())
+  organizationId       String
+  analysisId           String
+  videoId              String
+  analysisClusterId    String?
+  title                String
+  description          String
+  confidence           Float          @default(0.5)
+  supportingCommentIds Json
+  reviewStatus         AiReviewStatus @default(AI_GENERATED)
+  approvedKnowledgeId  String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  analysis        YouTubeVideoAnalysis   @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  analysisCluster YouTubeAnalysisCluster? @relation(fields: [analysisClusterId], references: [id], onDelete: SetNull)
+  capabilityCandidates YouTubeCapabilityCandidate[]
+
+  @@index([analysisId])
+  @@index([videoId, reviewStatus])
+}
+
+model YouTubeCapabilityCandidate {
+  id                      String         @id @default(cuid())
+  organizationId          String
+  analysisId              String
+  videoId                 String
+  knowledgeCandidateId    String?
+  name                    String
+  description             String
+  standardProcedure       String
+  checklist               Json
+  expectedOutcome         String
+  reviewStatus            AiReviewStatus @default(AI_GENERATED)
+  approvedCapabilityId    String?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  organization       Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  analysis           YouTubeVideoAnalysis      @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  knowledgeCandidate YouTubeKnowledgeCandidate? @relation(fields: [knowledgeCandidateId], references: [id], onDelete: SetNull)
+
+  @@index([analysisId])
+  @@index([videoId, reviewStatus])
+}
+
+model YouTubeApiQuotaEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  connectionId   String?
+  operation      String
+  estimatedUnits Int      @default(1)
+  videoId        String?
+  jobId          String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([operation])
 }

@@ -19,24 +19,55 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { useI18n } from "@/i18n";
+import type { MessageKey } from "@/i18n";
 
 const statCards = [
-  { key: "problems" as const, label: "Problems", href: "/problems", icon: CircleDot },
-  { key: "evidences" as const, label: "Evidence", href: "/evidence", icon: FileSearch },
-  { key: "knowledge" as const, label: "Knowledge", href: "/knowledge", icon: BookOpen },
-  { key: "capabilities" as const, label: "Capabilities", href: "/capabilities", icon: Wrench },
+  {
+    key: "problems" as const,
+    labelKey: "dashboard.stat.problems" as MessageKey,
+    href: "/problems",
+    icon: CircleDot,
+  },
+  {
+    key: "evidences" as const,
+    labelKey: "dashboard.stat.evidences" as MessageKey,
+    href: "/evidence",
+    icon: FileSearch,
+  },
+  {
+    key: "knowledge" as const,
+    labelKey: "dashboard.stat.knowledge" as MessageKey,
+    href: "/knowledge",
+    icon: BookOpen,
+  },
+  {
+    key: "capabilities" as const,
+    labelKey: "dashboard.stat.capabilities" as MessageKey,
+    href: "/capabilities",
+    icon: Wrench,
+  },
 ];
+
+const entityLabelKey: Record<string, MessageKey> = {
+  problem: "entity.problem",
+  evidence: "entity.evidence",
+  cluster: "entity.cluster",
+  knowledge: "entity.knowledge",
+  capability: "entity.capability",
+};
 
 export function DashboardView() {
   const { data, isLoading, error } = useDashboard();
   const router = useRouter();
   const [q, setQ] = useState("");
+  const { t, locale } = useI18n();
 
   if (isLoading) return <ListSkeleton rows={6} />;
   if (error) {
     return (
       <EmptyState
-        title="Could not load dashboard"
+        title={t("dashboard.loadError")}
         description={(error as Error).message}
       />
     );
@@ -46,8 +77,8 @@ export function DashboardView() {
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        description="Track problems through evidence, knowledge, and capability."
+        title={t("dashboard.title")}
+        description={t("dashboard.description")}
       />
 
       <form
@@ -60,11 +91,11 @@ export function DashboardView() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search problems, evidence, knowledge, capabilities…"
+          placeholder={t("dashboard.searchPlaceholder")}
         />
         <Button type="submit">
           <Search className="h-4 w-4" />
-          Search
+          {t("common.search")}
         </Button>
       </form>
 
@@ -76,7 +107,7 @@ export function DashboardView() {
               <Card className="transition-colors hover:border-primary/40">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {card.label}
+                    {t(card.labelKey)}
                   </CardTitle>
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -94,11 +125,15 @@ export function DashboardView() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recently created</CardTitle>
+            <CardTitle className="text-base">
+              {t("dashboard.recentCreated")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.recentCreated.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No items yet.</p>
+              <p className="text-sm text-muted-foreground">
+                {t("dashboard.empty")}
+              </p>
             ) : (
               data.recentCreated.map((item) => (
                 <Link
@@ -108,12 +143,14 @@ export function DashboardView() {
                 >
                   <div>
                     <div className="mb-1">
-                      <Badge variant="outline">{item.entityType}</Badge>
+                      <Badge variant="outline">
+                        {t(entityLabelKey[item.entityType] ?? "entity.problem")}
+                      </Badge>
                     </div>
                     <div className="text-sm font-medium">{item.title}</div>
                   </div>
                   <div className="shrink-0 text-xs text-muted-foreground">
-                    {formatDate(item.createdAt)}
+                    {formatDate(item.createdAt, locale)}
                   </div>
                 </Link>
               ))
@@ -123,11 +160,15 @@ export function DashboardView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recently updated</CardTitle>
+            <CardTitle className="text-base">
+              {t("dashboard.recentUpdated")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.recentUpdated.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No items yet.</p>
+              <p className="text-sm text-muted-foreground">
+                {t("dashboard.empty")}
+              </p>
             ) : (
               data.recentUpdated.map((item) => (
                 <Link
@@ -137,12 +178,14 @@ export function DashboardView() {
                 >
                   <div>
                     <div className="mb-1">
-                      <Badge variant="outline">{item.entityType}</Badge>
+                      <Badge variant="outline">
+                        {t(entityLabelKey[item.entityType] ?? "entity.problem")}
+                      </Badge>
                     </div>
                     <div className="text-sm font-medium">{item.title}</div>
                   </div>
                   <div className="shrink-0 text-xs text-muted-foreground">
-                    {formatDate(item.updatedAt)}
+                    {formatDate(item.updatedAt, locale)}
                   </div>
                 </Link>
               ))

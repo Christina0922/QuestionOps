@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { PaginatedResult } from "@/types";
+import { tStatic } from "@/i18n";
 import { toast } from "sonner";
 
 export function useProblems(params: Record<string, string | number | undefined> = {}) {
@@ -39,7 +40,7 @@ export function useCreateProblem() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["problems"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Problem created");
+      toast.success(tStatic("problems.created"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -56,7 +57,7 @@ export function useUpdateProblem(id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["problems"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Problem updated");
+      toast.success(tStatic("problems.updated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -70,7 +71,7 @@ export function useDeleteProblem() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["problems"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Problem deleted");
+      toast.success(tStatic("problems.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
