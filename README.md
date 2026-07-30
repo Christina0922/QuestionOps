@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QuestionOps
 
-## Getting Started
+Evidence-driven system for structuring customer problems into reusable knowledge and capabilities.
 
-First, run the development server:
+```
+Problem → Evidence → Cluster → Knowledge → Capability
+```
+
+## Stack
+
+- Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
+- Prisma 6 + PostgreSQL
+- Clerk auth (with `DEV_AUTH_BYPASS` for local development)
+- Zod, React Query, Sonner
+- Layered architecture: repositories → services → API → UI
+
+## Prerequisites
+
+- Node.js 20+
+- PostgreSQL running locally (or a hosted database)
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy environment variables:
+
+```bash
+cp .env.example .env
+```
+
+Ensure at least:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/questionops?schema=public"
+DEV_AUTH_BYPASS=true
+NEXT_PUBLIC_DEV_AUTH_BYPASS=true
+```
+
+3. Create the database schema:
+
+```bash
+npm run db:push
+```
+
+4. Seed sample data (20 problems, 100 evidence, 20 knowledge, 10 capabilities):
+
+```bash
+npm run db:seed
+```
+
+5. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Auth modes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Local bypass (default in `.env`)
 
-## Learn More
+When `DEV_AUTH_BYPASS=true` and `NEXT_PUBLIC_DEV_AUTH_BYPASS=true`:
 
-To learn more about Next.js, take a look at the following resources:
+- Middleware skips Clerk
+- `getAuthContext()` upserts a demo user + organization + membership
+- Sign-in / sign-up pages redirect you to the dashboard message
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Clerk
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Set Clerk keys in `.env`
+2. Set `DEV_AUTH_BYPASS=false` and `NEXT_PUBLIC_DEV_AUTH_BYPASS=false`
+3. Ensure users select an active Clerk organization (org-scoped data)
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start Next.js |
+| `npm run build` | Generate Prisma client + build |
+| `npm run test` | Run Vitest |
+| `npm run db:push` | Push Prisma schema |
+| `npm run db:seed` | Seed demo data |
+| `npm run db:studio` | Open Prisma Studio |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Architecture
+
+```
+src/
+  app/            # App Router pages + API routes
+  components/     # UI + feature components
+  hooks/          # React Query hooks
+  lib/            # auth, prisma, api helpers
+  schemas/        # Zod validators
+  repositories/   # Prisma data access
+  services/       # Business logic + activity logging
+  prompts/        # AI draft prompts
+  types/          # Shared types
+```
+
+API routes never talk to Prisma directly — they call services, which call repositories.
+
+## AI drafts (optional)
+
+Set `OPENAI_API_KEY` to enable OpenAI-backed drafts for knowledge and clusters.
+
+Without a key, endpoints return deterministic template drafts so the MVP flow still works.
+
+## MVP flow checklist
+
+1. Open dashboard
+2. Create a problem
+3. Attach multiple evidence items
+4. Cluster related evidence
+5. Create knowledge (optionally AI draft)
+6. Create a capability from knowledge
+7. Search across entities
+8. Review activity log
+9. Edit / soft-delete records

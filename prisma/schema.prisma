@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProblemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProblemStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model User {
+  id        String    @id @default(cuid())
+  clerkId   String    @unique
+  email     String
+  name      String?
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships          OrganizationMember[]
+  activities           Activity[]
+  problemsReported     Problem[]            @relation("ProblemReporter")
+  evidencesAuthored    Evidence[]           @relation("EvidenceAuthor")
+  knowledgeAuthored    Knowledge[]          @relation("KnowledgeAuthor")
+  capabilitiesAuthored Capability[]         @relation("CapabilityAuthor")
+
+  @@index([deletedAt])
+}
+
+model Organization {
+  id         String    @id @default(cuid())
+  clerkOrgId String    @unique
+  name       String
+  slug       String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  members      OrganizationMember[]
+  problems     Problem[]
+  evidences    Evidence[]
+  clusters     Cluster[]
+  knowledge    Knowledge[]
+  capabilities Capability[]
+  tags         Tag[]
+  activities   Activity[]
+
+  @@index([deletedAt])
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String   @default("member")
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model Problem {
+  id             String          @id @default(cuid())
+  organizationId String
+  title          String
+  description    String
+  source         String?
+  customer       String?
+  reporterId     String?
+  priority       ProblemPriority @default(MEDIUM)
+  status         ProblemStatus   @default(OPEN)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reporter     User?         @relation("ProblemReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  evidences    Evidence[]
+  clusters     Cluster[]
+  knowledge    Knowledge[]
+  capabilities Capability[]
+  tags         ProblemTag[]
+
+  @@index([organizationId, deletedAt])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, updatedAt])
+  @@index([title])
+}
+
+model Evidence {
+  id             String    @id @default(cuid())
+  organizationId String
+  problemId      String
+  observation    String
+  transcript     String?
+  screenshotUrl  String?
+  link           String?
+  authorId       String?
+  confidence     Float     @default(0.5)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization      Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  problem           Problem              @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  author            User?                @relation("EvidenceAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  clusters          ClusterEvidence[]
+  knowledgeLinks    KnowledgeEvidence[]
+  tags              EvidenceTag[]
+
+  @@index([organizationId, deletedAt])
+  @@index([problemId, deletedAt])
+  @@index([organizationId, createdAt])
+}
+
+model Cluster {
+  id             String    @id @default(cuid())
+  organizationId String
+  problemId      String?
+  name           String
+  summary        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  problem        Problem?           @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  evidences      ClusterEvidence[]
+  knowledgeLinks KnowledgeCluster[]
+
+  @@index([organizationId, deletedAt])
+  @@index([problemId])
+}
+
+model ClusterEvidence {
+  clusterId  String
+  evidenceId String
+  createdAt  DateTime @default(now())
+
+  cluster  Cluster  @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@id([clusterId, evidenceId])
+  @@index([evidenceId])
+}
+
+model Knowledge {
+  id             String    @id @default(cuid())
+  organizationId String
+  problemId      String?
+  title          String
+  description    String
+  confidence     Float     @default(0.5)
+  authorId       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  problem      Problem?           @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  author       User?              @relation("KnowledgeAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  clusters     KnowledgeCluster[]
+  evidences    KnowledgeEvidence[]
+  capabilities Capability[]
+  tags         KnowledgeTag[]
+
+  @@index([organizationId, deletedAt])
+  @@index([problemId])
+  @@index([organizationId, updatedAt])
+  @@index([title])
+}
+
+model KnowledgeCluster {
+  knowledgeId String
+  clusterId   String
+
+  knowledge Knowledge @relation(fields: [knowledgeId], references: [id], onDelete: Cascade)
+  cluster   Cluster   @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+
+  @@id([knowledgeId, clusterId])
+  @@index([clusterId])
+}
+
+model KnowledgeEvidence {
+  knowledgeId String
+  evidenceId  String
+
+  knowledge Knowledge @relation(fields: [knowledgeId], references: [id], onDelete: Cascade)
+  evidence  Evidence  @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@id([knowledgeId, evidenceId])
+  @@index([evidenceId])
+}
+
+model Capability {
+  id                String    @id @default(cuid())
+  organizationId    String
+  knowledgeId       String?
+  problemId         String?
+  name              String
+  description       String
+  standardProcedure String
+  checklist         Json      @default("[]")
+  expectedOutcome   String
+  authorId          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  knowledge    Knowledge?      @relation(fields: [knowledgeId], references: [id], onDelete: SetNull)
+  problem      Problem?        @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  author       User?           @relation("CapabilityAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  tags         CapabilityTag[]
+
+  @@index([organizationId, deletedAt])
+  @@index([knowledgeId])
+  @@index([problemId])
+  @@index([name])
+}
+
+model Tag {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  createdAt      DateTime  @default(now())
+  deletedAt      DateTime?
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  problems     ProblemTag[]
+  evidences    EvidenceTag[]
+  knowledge    KnowledgeTag[]
+  capabilities CapabilityTag[]
+
+  @@unique([organizationId, name])
+  @@index([deletedAt])
+}
+
+model ProblemTag {
+  problemId String
+  tagId     String
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+  @@index([tagId])
+}
+
+model EvidenceTag {
+  evidenceId String
+  tagId      String
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, tagId])
+  @@index([tagId])
+}
+
+model KnowledgeTag {
+  knowledgeId String
+  tagId       String
+
+  knowledge Knowledge @relation(fields: [knowledgeId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([knowledgeId, tagId])
+  @@index([tagId])
+}
+
+model CapabilityTag {
+  capabilityId String
+  tagId        String
+
+  capability Capability @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  tag        Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([capabilityId, tagId])
+  @@index([tagId])
+}
+
+model Activity {
+  id             String         @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         ActivityAction
+  entityType     String
+  entityId       String
+  summary        String
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+}
