@@ -42,16 +42,18 @@ export function AppSidebar() {
       <Link
         href="/"
         onClick={() => setOpen(false)}
-        className="flex items-center gap-2 border-b border-sidebar-border px-4 py-4 transition-colors hover:bg-accent/40"
+        className="flex items-start gap-2 border-b border-sidebar-border px-4 py-4 transition-colors hover:bg-accent/40"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Lightbulb className="h-4 w-4" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold tracking-tight">
             {t("app.name")}
           </div>
-          <div className="text-xs text-muted-foreground">{t("app.tagline")}</div>
+          <p className="mt-0.5 whitespace-pre-line text-xs leading-snug break-keep text-muted-foreground">
+            {t("app.tagline")}
+          </p>
         </div>
       </Link>
       <nav className="flex-1 space-y-1 p-3">
@@ -84,7 +86,7 @@ export function AppSidebar() {
 
   return (
     <>
-      <aside className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar md:block">
+      <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar md:block">
         {content}
       </aside>
       <div className="md:hidden">

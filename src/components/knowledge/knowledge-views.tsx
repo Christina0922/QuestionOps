@@ -44,9 +44,29 @@ export function KnowledgeList() {
       <PageHeader
         title={t("knowledge.title")}
         description={t("knowledge.description")}
-        actionHref="/knowledge/new"
-        actionLabel={t("knowledge.new")}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/live-sessions">{t("knowledge.cta.sessions")}</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/knowledge/new">{t("knowledge.new")}</Link>
+            </Button>
+          </div>
+        }
       />
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">{t("knowledge.help.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>{t("knowledge.help.what")}</p>
+          <p>{t("knowledge.help.when")}</p>
+          <p>{t("knowledge.help.how")}</p>
+        </CardContent>
+      </Card>
+
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
         <EmptyState
@@ -59,9 +79,14 @@ export function KnowledgeList() {
           title={t("knowledge.empty")}
           description={t("knowledge.emptyHint")}
           action={
-            <Button asChild>
-              <Link href="/knowledge/new">{t("knowledge.new")}</Link>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild>
+                <Link href="/live-sessions">{t("knowledge.cta.sessions")}</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/guide">{t("nav.guide")}</Link>
+              </Button>
+            </div>
           }
         />
       ) : null}
@@ -191,10 +216,15 @@ export function KnowledgeForm({
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>
-          {mode === "create" ? t("knowledge.new") : t("knowledge.edit")}
-        </CardTitle>
+      <CardHeader className="flex-row items-start justify-between space-y-0 gap-4">
+        <div className="space-y-1">
+          <CardTitle>
+            {mode === "create" ? t("knowledge.new") : t("knowledge.edit")}
+          </CardTitle>
+          <p className="text-sm font-normal text-muted-foreground">
+            {t("knowledge.form.hint")}
+          </p>
+        </div>
         <Button
           type="button"
           variant="secondary"
@@ -210,6 +240,7 @@ export function KnowledgeForm({
             <Label>{t("common.title")}</Label>
             <Input
               required
+              placeholder={t("knowledge.field.titleHint")}
               value={values.title}
               onChange={(e) =>
                 setValues((v) => ({ ...v, title: e.target.value }))
@@ -217,7 +248,7 @@ export function KnowledgeForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>{t("common.description")}</Label>
+            <Label>{t("knowledge.field.body")}</Label>
             <Textarea
               required
               rows={8}
@@ -346,7 +377,7 @@ export function KnowledgeDetail({ id }: { id: string }) {
         </Button>
         <Button variant="outline" asChild>
           <Link href={`/capabilities/new?knowledgeId=${id}`}>
-            {t("capabilities.new")}
+            {t("capabilities.newFromKnowledge")}
           </Link>
         </Button>
         <Button

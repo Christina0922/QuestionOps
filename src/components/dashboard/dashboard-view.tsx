@@ -83,14 +83,22 @@ export function DashboardView() {
         }
       />
 
-      <Card className="mb-6">
+      <Card className="mb-6 border-primary/30 bg-primary/5">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm text-muted-foreground">
-            {t("dashboard.guide.teaser")}
-          </p>
-          <Button variant="secondary" asChild>
-            <Link href="/guide">{t("nav.guide")}</Link>
-          </Button>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{t("dashboard.guide.teaser")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("dashboard.guide.intro")}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/live-sessions/new">{t("dashboard.guide.ctaNew")}</Link>
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link href="/guide">{t("dashboard.guide.open")}</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

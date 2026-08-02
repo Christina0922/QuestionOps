@@ -42,9 +42,30 @@ export function CapabilitiesList() {
       <PageHeader
         title={t("capabilities.title")}
         description={t("capabilities.description")}
-        actionHref="/capabilities/new"
-        actionLabel={t("capabilities.new")}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/knowledge">{t("capabilities.cta.knowledge")}</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/capabilities/new">{t("capabilities.new")}</Link>
+            </Button>
+          </div>
+        }
       />
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">{t("capabilities.help.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>{t("capabilities.help.what")}</p>
+          <p>{t("capabilities.help.when")}</p>
+          <p>{t("capabilities.help.how")}</p>
+          <p>{t("capabilities.help.example")}</p>
+        </CardContent>
+      </Card>
+
       {isLoading ? <ListSkeleton /> : null}
       {error ? (
         <EmptyState
@@ -57,9 +78,14 @@ export function CapabilitiesList() {
           title={t("capabilities.empty")}
           description={t("capabilities.emptyHint")}
           action={
-            <Button asChild>
-              <Link href="/capabilities/new">{t("capabilities.new")}</Link>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild>
+                <Link href="/knowledge">{t("capabilities.cta.knowledge")}</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/live-sessions">{t("knowledge.cta.sessions")}</Link>
+              </Button>
+            </div>
           }
         />
       ) : null}
@@ -177,6 +203,9 @@ export function CapabilityForm({
         <CardTitle>
           {mode === "create" ? t("capabilities.new") : t("capabilities.edit")}
         </CardTitle>
+        <p className="text-sm font-normal text-muted-foreground">
+          {t("capabilities.form.hint")}
+        </p>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -184,6 +213,7 @@ export function CapabilityForm({
             <Label>{t("common.name")}</Label>
             <Input
               required
+              placeholder={t("capabilities.field.nameHint")}
               value={values.name}
               onChange={(e) =>
                 setValues((v) => ({ ...v, name: e.target.value }))

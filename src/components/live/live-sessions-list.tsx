@@ -31,15 +31,15 @@ const sessionStatusVariant: Record<
 };
 
 const sessionStatusLabel: Record<LiveSessionStatus, string> = {
-  DRAFT: "초안",
+  DRAFT: "작성 중",
   SCHEDULED: "예정",
   PREPARING: "준비",
-  LIVE: "LIVE",
-  ENDED: "종료",
-  PROCESSING: "처리 중",
-  REVIEW_READY: "검토 준비",
-  ANSWER_WRITING: "답변 작성",
-  READY_TO_PUBLISH: "게시 준비",
+  LIVE: "방송 중",
+  ENDED: "방송 끝",
+  PROCESSING: "글 답변 준비",
+  REVIEW_READY: "남은 질문 있음",
+  ANSWER_WRITING: "글 답변 중",
+  READY_TO_PUBLISH: "올릴 준비",
   COMPLETED: "완료",
   ARCHIVED: "보관",
   CANCELLED: "취소",
@@ -53,7 +53,7 @@ export function LiveSessionsList() {
   if (error) {
     return (
       <EmptyState
-        title="라이브 세션 불러오기 실패"
+        title="강의 목록을 불러오지 못했어요"
         description={(error as Error).message}
       />
     );
@@ -62,20 +62,43 @@ export function LiveSessionsList() {
   return (
     <div>
       <PageHeader
-        title="라이브 세션"
-        description="질문 접수부터 생방송 답변, 사후 정리까지 관리합니다."
-        actionHref="/live-sessions/new"
-        actionLabel="새 세션"
+        title="강의 질문"
+        description="유튜브 채팅 질문을 모읍니다. 방송 중에는 말로 답하고, 못 한 질문은 방송이 끝난 뒤 글로 답합니다."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/guide">시작 가이드</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/live-sessions/new">첫 강의 만들기</Link>
+            </Button>
+          </div>
+        }
       />
+
+      <Card className="mb-6">
+        <CardContent className="space-y-2 p-4 text-sm text-muted-foreground">
+          <p>
+            <strong className="text-foreground">처음이라면:</strong> 강의 하나
+            만들기 → 연습용 채팅 가져오기 → 질문 고르기 → 방송 화면. YouTube
+            연결은 나중에 해도 됩니다.
+          </p>
+        </CardContent>
+      </Card>
 
       {!data?.length ? (
         <EmptyState
-          title="라이브 세션이 없습니다"
-          description="새 세션을 만들어 시작하세요."
+          title="아직 강의가 없어요"
+          description="이름을 하나 정하고 만들면, 가짜 채팅으로 바로 연습할 수 있습니다."
           action={
-            <Button asChild>
-              <Link href="/live-sessions/new">새 세션 만들기</Link>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild>
+                <Link href="/live-sessions/new">첫 강의 만들기</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/guide">시작 가이드 보기</Link>
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -90,7 +113,7 @@ export function LiveSessionsList() {
                         {session.status === "LIVE" ? (
                           <span className="flex items-center gap-1">
                             <Radio className="h-3 w-3" />
-                            LIVE
+                            방송 중
                           </span>
                         ) : (
                           sessionStatusLabel[session.status]
@@ -110,9 +133,9 @@ export function LiveSessionsList() {
                   <div className="flex shrink-0 flex-wrap gap-2 text-xs text-muted-foreground">
                     <span>질문 {session.totalQuestions}</span>
                     <span>·</span>
-                    <span>답변 {session.answeredLiveCount}</span>
+                    <span>답함 {session.answeredLiveCount}</span>
                     <span>·</span>
-                    <span>미답 {session.unansweredCount}</span>
+                    <span>못 답함 {session.unansweredCount}</span>
                   </div>
                 </CardContent>
               </Card>
