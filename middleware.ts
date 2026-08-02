@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { shouldBypassClerkAuth } from "@/lib/clerk-config";
 
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
 ]);
-
-const bypass = process.env.DEV_AUTH_BYPASS === "true";
-const clerkConfigured = Boolean(
-  process.env.CLERK_SECRET_KEY?.trim() &&
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim(),
-);
 
 const clerkHandler = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
@@ -24,9 +19,9 @@ function passthroughMiddleware() {
 
 /**
  * Avoid MIDDLEWARE_INVOCATION_FAILED on Vercel when Clerk env vars are missing.
- * Production should set Clerk keys; local/demo can use DEV_AUTH_BYPASS=true.
+ * When bypassing, getAuthContext() must also skip auth() (see clerk-config).
  */
-export default bypass || !clerkConfigured ? passthroughMiddleware : clerkHandler;
+export default shouldBypassClerkAuth() ? passthroughMiddleware : clerkHandler;
 
 export const config = {
   matcher: [

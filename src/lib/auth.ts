@@ -1,9 +1,8 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api-error";
+import { shouldBypassClerkAuth } from "@/lib/clerk-config";
 import type { AuthContext } from "@/types";
-
-const DEV_BYPASS = process.env.DEV_AUTH_BYPASS === "true";
 
 async function ensureDevAuthContext(): Promise<AuthContext> {
   const clerkUserId = process.env.DEV_USER_ID ?? "dev_user_1";
@@ -146,12 +145,12 @@ async function syncClerkAuthContext(): Promise<AuthContext> {
 }
 
 export async function getAuthContext(): Promise<AuthContext> {
-  if (DEV_BYPASS) {
+  if (shouldBypassClerkAuth()) {
     return ensureDevAuthContext();
   }
   return syncClerkAuthContext();
 }
 
 export function isDevAuthBypass() {
-  return DEV_BYPASS;
+  return shouldBypassClerkAuth();
 }
