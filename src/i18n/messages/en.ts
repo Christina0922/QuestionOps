@@ -8,6 +8,7 @@ export const en = {
   "app.devUser": "Dev User",
 
   "nav.dashboard": "Dashboard",
+  "nav.guide": "How to use",
   "nav.liveSessions": "Live Sessions",
   "nav.problems": "Problems",
   "nav.evidence": "Evidence",
@@ -99,6 +100,22 @@ export const en = {
   "dashboard.guide.cta": "Open Live Sessions",
   "dashboard.guide.ctaNew": "New session",
   "dashboard.recentSessions": "Recent live sessions",
+  "dashboard.guide.teaser": "See the step-by-step operator guide.",
+  "dashboard.guide.open": "Open How to use",
+
+  "guide.title": "How to use",
+  "guide.description": "Operator guide for QuestionOps live lecture Q&A.",
+  "guide.whatTitle": "What this product is",
+  "guide.whatBody":
+    "YouTube is only a data source. The product manages questions, live handoff, unanswered follow-up, and approved publications.",
+  "guide.flowTitle": "Recommended flow",
+  "guide.shortcutsTitle": "Control shortcuts",
+  "guide.shortcut.a": "A — Mark answered live",
+  "guide.shortcut.p": "P — Partial answer",
+  "guide.shortcut.l": "L — Answer later / defer",
+  "guide.shortcut.n": "N — Present next question",
+  "guide.shortcut.other":
+    "D duplicate · I important · X exclude (when focus is not in an input)",
 
   "problems.title": "Problems",
   "problems.description": "Customer problems under investigation.",

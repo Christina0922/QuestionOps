@@ -37,32 +37,6 @@ const legacyStatCards = [
   },
 ];
 
-const guideSteps: Array<{
-  titleKey: MessageKey;
-  descKey: MessageKey;
-}> = [
-  {
-    titleKey: "dashboard.guide.step1",
-    descKey: "dashboard.guide.step1Desc",
-  },
-  {
-    titleKey: "dashboard.guide.step2",
-    descKey: "dashboard.guide.step2Desc",
-  },
-  {
-    titleKey: "dashboard.guide.step3",
-    descKey: "dashboard.guide.step3Desc",
-  },
-  {
-    titleKey: "dashboard.guide.step4",
-    descKey: "dashboard.guide.step4Desc",
-  },
-  {
-    titleKey: "dashboard.guide.step5",
-    descKey: "dashboard.guide.step5Desc",
-  },
-];
-
 export function DashboardView() {
   const { data: live, isLoading: liveLoading, error: liveError } =
     useLiveDashboard();
@@ -103,35 +77,20 @@ export function DashboardView() {
               <Link href="/live-sessions">{t("dashboard.guide.cta")}</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/live-sessions/new">{t("dashboard.guide.ctaNew")}</Link>
+              <Link href="/guide">{t("dashboard.guide.open")}</Link>
             </Button>
           </div>
         }
       />
 
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">{t("dashboard.guide.title")}</CardTitle>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
           <p className="text-sm text-muted-foreground">
-            {t("dashboard.guide.intro")}
+            {t("dashboard.guide.teaser")}
           </p>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-4">
-            {guideSteps.map((step, index) => (
-              <li key={step.titleKey} className="flex gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                  {index + 1}
-                </span>
-                <div>
-                  <div className="text-sm font-medium">{t(step.titleKey)}</div>
-                  <p className="text-sm text-muted-foreground">
-                    {t(step.descKey)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <Button variant="secondary" asChild>
+            <Link href="/guide">{t("nav.guide")}</Link>
+          </Button>
         </CardContent>
       </Card>
 

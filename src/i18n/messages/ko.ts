@@ -6,6 +6,7 @@ export const ko: Messages = {
   "app.devUser": "개발 사용자",
 
   "nav.dashboard": "대시보드",
+  "nav.guide": "사용법",
   "nav.liveSessions": "라이브 세션",
   "nav.problems": "문제",
   "nav.evidence": "증거",
@@ -97,6 +98,22 @@ export const ko: Messages = {
   "dashboard.guide.cta": "라이브 세션 열기",
   "dashboard.guide.ctaNew": "새 세션",
   "dashboard.recentSessions": "최근 라이브 세션",
+  "dashboard.guide.teaser": "운영 흐름을 단계별로 확인하세요.",
+  "dashboard.guide.open": "사용법 보기",
+
+  "guide.title": "사용법",
+  "guide.description": "QuestionOps 강의 질문 운영 가이드입니다.",
+  "guide.whatTitle": "이 제품은",
+  "guide.whatBody":
+    "YouTube는 데이터 출처일 뿐입니다. 제품은 질문 접수·생방송 전달·미답변 정리·승인 후 게시를 관리합니다.",
+  "guide.flowTitle": "권장 흐름",
+  "guide.shortcutsTitle": "Control 단축키",
+  "guide.shortcut.a": "A — 생방송 답변 완료",
+  "guide.shortcut.p": "P — 부분 답변",
+  "guide.shortcut.l": "L — 나중에 답변",
+  "guide.shortcut.n": "N — 다음 질문 전달",
+  "guide.shortcut.other":
+    "D 중복 · I 중요 · X 제외 (입력창에 포커스가 없을 때)",
 
   "problems.title": "문제",
   "problems.description": "조사 중인 고객 문제입니다.",

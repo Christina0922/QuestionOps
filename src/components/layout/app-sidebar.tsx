@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BookOpen,
+  CircleHelp,
   LayoutDashboard,
   Lightbulb,
   Menu,
@@ -22,6 +23,7 @@ import type { MessageKey } from "@/i18n";
 
 const nav: Array<{ href: string; labelKey: MessageKey; icon: typeof LayoutDashboard }> = [
   { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/guide", labelKey: "nav.guide", icon: CircleHelp },
   { href: "/live-sessions", labelKey: "nav.liveSessions", icon: Radio },
   { href: "/knowledge", labelKey: "nav.knowledge", icon: BookOpen },
   { href: "/capabilities", labelKey: "nav.capabilities", icon: Wrench },
