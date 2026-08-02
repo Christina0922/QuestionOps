@@ -4,10 +4,11 @@ export const LOCALE_STORAGE_KEY = "questionops.locale";
 
 export const en = {
   "app.name": "QuestionOps",
-  "app.tagline": "Evidence → Capability",
+  "app.tagline": "Questions → Live → Knowledge",
   "app.devUser": "Dev User",
 
   "nav.dashboard": "Dashboard",
+  "nav.liveSessions": "Live Sessions",
   "nav.problems": "Problems",
   "nav.evidence": "Evidence",
   "nav.clusters": "Clusters",

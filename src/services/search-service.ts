@@ -1,4 +1,5 @@
 import { truncate } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
 import { capabilityRepository } from "@/repositories/capability-repository";
 import { evidenceRepository } from "@/repositories/evidence-repository";
 import { knowledgeRepository } from "@/repositories/knowledge-repository";
@@ -30,10 +31,114 @@ export class PrismaSearchProvider implements SearchProvider {
   async search(organizationId: string, input: SearchInput) {
     const types: SearchEntityType[] = input.types?.length
       ? input.types
-      : ["problem", "evidence", "knowledge", "capability"];
+      : [
+          "live_session",
+          "question",
+          "knowledge",
+          "capability",
+          "publication",
+          "submission",
+        ];
 
     const take = Math.max(input.pageSize * 2, 20);
     const results: SearchHit[] = [];
+
+    if (types.includes("live_session")) {
+      const sessions = await prisma.liveSession.findMany({
+        where: {
+          organizationId,
+          deletedAt: null,
+          OR: [
+            { title: { contains: input.q, mode: "insensitive" } },
+            { description: { contains: input.q, mode: "insensitive" } },
+          ],
+        },
+        take,
+        orderBy: { updatedAt: "desc" },
+      });
+      for (const s of sessions) {
+        results.push({
+          id: s.id,
+          entityType: "live_session",
+          title: s.title,
+          snippet: `상태: ${s.status} · 질문 ${s.totalQuestions}`,
+          score: scoreMatch(input.q, s.title, s.description),
+          href: `/live-sessions/${s.id}`,
+          updatedAt: s.updatedAt.toISOString(),
+        });
+      }
+    }
+
+    if (types.includes("question")) {
+      const questions = await prisma.question.findMany({
+        where: {
+          organizationId,
+          deletedAt: null,
+          questionText: { contains: input.q, mode: "insensitive" },
+        },
+        take,
+        orderBy: { updatedAt: "desc" },
+      });
+      for (const q of questions) {
+        results.push({
+          id: q.id,
+          entityType: "question",
+          title: truncate(q.questionText, 80),
+          snippet: `세션 질문 · 상태: ${q.status}`,
+          score: scoreMatch(input.q, q.questionText),
+          href: `/live-sessions/${q.liveSessionId}/questions`,
+          updatedAt: q.updatedAt.toISOString(),
+        });
+      }
+    }
+
+    if (types.includes("submission")) {
+      const submissions = await prisma.submission.findMany({
+        where: {
+          organizationId,
+          deletedAt: null,
+          originalText: { contains: input.q, mode: "insensitive" },
+        },
+        take,
+        orderBy: { updatedAt: "desc" },
+      });
+      for (const s of submissions) {
+        results.push({
+          id: s.id,
+          entityType: "submission",
+          title: truncate(s.originalText, 80),
+          snippet: `원본 · ${s.sourceType}`,
+          score: scoreMatch(input.q, s.originalText),
+          href: `/live-sessions/${s.liveSessionId}/submissions`,
+          updatedAt: s.updatedAt.toISOString(),
+        });
+      }
+    }
+
+    if (types.includes("publication")) {
+      const pubs = await prisma.publication.findMany({
+        where: {
+          organizationId,
+          OR: [
+            { title: { contains: input.q, mode: "insensitive" } },
+            { content: { contains: input.q, mode: "insensitive" } },
+          ],
+        },
+        take,
+        orderBy: { updatedAt: "desc" },
+      });
+      for (const p of pubs) {
+        results.push({
+          id: p.id,
+          entityType: "publication",
+          title: p.title,
+          snippet: truncate(p.content, 160),
+          score: scoreMatch(input.q, p.title, p.content),
+          href: `/live-sessions/${p.liveSessionId}/publications`,
+          updatedAt: p.updatedAt.toISOString(),
+        });
+      }
+    }
 
     if (types.includes("problem")) {
       const problems = await problemRepository.search(

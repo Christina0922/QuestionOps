@@ -5,17 +5,14 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BookOpen,
-  Boxes,
-  CircleDot,
-  FileSearch,
   LayoutDashboard,
   Lightbulb,
   Menu,
+  Radio,
   Search,
   Settings,
   Wrench,
   X,
-  Youtube,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -25,14 +22,11 @@ import type { MessageKey } from "@/i18n";
 
 const nav: Array<{ href: string; labelKey: MessageKey; icon: typeof LayoutDashboard }> = [
   { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { href: "/problems", labelKey: "nav.problems", icon: CircleDot },
-  { href: "/evidence", labelKey: "nav.evidence", icon: FileSearch },
-  { href: "/clusters", labelKey: "nav.clusters", icon: Boxes },
+  { href: "/live-sessions", labelKey: "nav.liveSessions", icon: Radio },
   { href: "/knowledge", labelKey: "nav.knowledge", icon: BookOpen },
   { href: "/capabilities", labelKey: "nav.capabilities", icon: Wrench },
-  { href: "/youtube/videos", labelKey: "nav.youtubeVideos", icon: Youtube },
-  { href: "/settings/integrations/youtube", labelKey: "nav.youtube", icon: Settings },
   { href: "/search", labelKey: "nav.search", icon: Search },
+  { href: "/settings/integrations/youtube", labelKey: "nav.youtube", icon: Settings },
   { href: "/activity", labelKey: "nav.activity", icon: Activity },
 ];
 

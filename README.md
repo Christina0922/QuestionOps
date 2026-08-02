@@ -1,10 +1,12 @@
 # QuestionOps
 
-Evidence-driven system for structuring customer problems into reusable knowledge and capabilities.
+강의 질문 운영 시스템입니다. 자동 답변 챗봇이 아닙니다.
 
 ```
-Problem → Evidence → Cluster → Knowledge → Capability
+LiveSession → Submission → Question → LiveAnswer / TextAnswer → Publication → Knowledge → Capability
 ```
+
+핵심: 질문 접수 · 판정 · 생방송 전달 · 음성 답변 추적 · 미답변 관리 · 사후 초안 검토 · 게시물 복사 · Knowledge 축적
 
 ## Stack
 
@@ -47,7 +49,7 @@ NEXT_PUBLIC_DEV_AUTH_BYPASS=true
 npm run db:push
 ```
 
-4. Seed sample data (20 problems, 100 evidence, 20 knowledge, 10 capabilities):
+4. Seed sample data (includes a live session with mock chat/questions):
 
 ```bash
 npm run db:seed

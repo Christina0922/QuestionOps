@@ -54,8 +54,26 @@ function status(i: number): ProblemStatus {
 async function main() {
   console.log("Seeding QuestionOps…");
 
+  await prisma.publicationItem.deleteMany();
+  await prisma.publication.deleteMany();
+  await prisma.textAnswer.deleteMany();
+  await prisma.liveAnswer.deleteMany();
+  await prisma.questionAnswerMatch.deleteMany();
+  await prisma.transcriptSegment.deleteMany();
+  await prisma.queueItem.deleteMany();
+  await prisma.question.deleteMany();
+  await prisma.questionCluster.deleteMany();
+  await prisma.submission.deleteMany();
+  await prisma.liveSession.deleteMany();
   await prisma.activity.deleteMany();
+  await prisma.youTubeCapabilityCandidate.deleteMany();
+  await prisma.youTubeKnowledgeCandidate.deleteMany();
+  await prisma.youTubeAnalysisCluster.deleteMany();
+  await prisma.youTubeVideoAnalysis.deleteMany();
+  await prisma.youTubeApiQuotaEvent.deleteMany();
+  await prisma.youTubeComment.deleteMany();
   await prisma.youTubeSyncJob.deleteMany();
+  await prisma.youTubeVideo.deleteMany();
   await prisma.youTubeChannel.deleteMany();
   await prisma.youTubeConnection.deleteMany();
   await prisma.capabilityTag.deleteMany();
@@ -283,7 +301,69 @@ async function main() {
     });
   }
 
-  // Optional mock YouTube connection for UI testing without Google OAuth
+  // Live lecture Q&A seed (product core)
+  const liveSession = await prisma.liveSession.create({
+    data: {
+      organizationId: org.id,
+      title: "8월 온라인 설명회",
+      description: "초보자 대상 라이브 세션 시드",
+      status: "PREPARING",
+      moderatorId: user.id,
+      speakerId: user.id,
+    },
+  });
+
+  const chatSamples = [
+    "초보자도 가능한가요?",
+    "비용은 얼마인가요?",
+    "준비물은 무엇인가요?",
+    "오늘 강의 정말 유익해요!",
+    "환불은 어떻게 하나요?",
+    "ㅋㅋ 맞아요",
+    "화면이 안 보여요",
+    "강의 자료 링크 주세요",
+  ];
+
+  for (let i = 0; i < chatSamples.length; i++) {
+    const text = chatSamples[i]!;
+    const isQ = /[?？]|인가요|어떻게|얼마|무엇|준비|환불|링크|보여/.test(text);
+    const sub = await prisma.submission.create({
+      data: {
+        organizationId: org.id,
+        liveSessionId: liveSession.id,
+        sourceType: "YOUTUBE_LIVE_CHAT",
+        externalId: `seed_chat_${i + 1}`,
+        authorDisplayName: `시청자${i + 1}`,
+        originalText: text,
+        normalizedText: text,
+        publishedAt: new Date(Date.now() - i * 120_000),
+        messageType: isQ ? "QUESTION" : text.includes("유익") ? "PRAISE" : "CHAT",
+      },
+    });
+    if (isQ) {
+      await prisma.question.create({
+        data: {
+          organizationId: org.id,
+          liveSessionId: liveSession.id,
+          submissionId: sub.id,
+          questionText: text,
+          status: "NEEDS_REVIEW",
+          priority: text.includes("안 보여") ? "HIGH" : "NORMAL",
+        },
+      });
+    }
+  }
+
+  await prisma.liveSession.update({
+    where: { id: liveSession.id },
+    data: {
+      totalSubmissions: chatSamples.length,
+      totalQuestions: await prisma.question.count({
+        where: { liveSessionId: liveSession.id },
+      }),
+    },
+  });
+
   if (process.env.YOUTUBE_SEED_MOCK === "true") {
     const connection = await prisma.youTubeConnection.create({
       data: {
@@ -314,6 +394,7 @@ async function main() {
   }
 
   console.log("Seed complete:", {
+    liveSession: liveSession.id,
     problems: problems.length,
     evidences: evidences.length,
     clusters: clusters.length,

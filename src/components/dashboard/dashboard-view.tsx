@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   BookOpen,
-  CircleDot,
-  FileSearch,
+  Radio,
   Search,
   Wrench,
 } from "lucide-react";
+import { useLiveDashboard } from "@/hooks/use-live-sessions";
 import { useDashboard } from "@/hooks/use-meta";
 import { PageHeader } from "@/components/shared/page-header";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
@@ -22,19 +22,7 @@ import { formatDate } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 import type { MessageKey } from "@/i18n";
 
-const statCards = [
-  {
-    key: "problems" as const,
-    labelKey: "dashboard.stat.problems" as MessageKey,
-    href: "/problems",
-    icon: CircleDot,
-  },
-  {
-    key: "evidences" as const,
-    labelKey: "dashboard.stat.evidences" as MessageKey,
-    href: "/evidence",
-    icon: FileSearch,
-  },
+const legacyStatCards = [
   {
     key: "knowledge" as const,
     labelKey: "dashboard.stat.knowledge" as MessageKey,
@@ -49,30 +37,33 @@ const statCards = [
   },
 ];
 
-const entityLabelKey: Record<string, MessageKey> = {
-  problem: "entity.problem",
-  evidence: "entity.evidence",
-  cluster: "entity.cluster",
-  knowledge: "entity.knowledge",
-  capability: "entity.capability",
-};
-
 export function DashboardView() {
-  const { data, isLoading, error } = useDashboard();
+  const { data: live, isLoading: liveLoading, error: liveError } = useLiveDashboard();
+  const { data: legacy } = useDashboard();
   const router = useRouter();
   const [q, setQ] = useState("");
   const { t, locale } = useI18n();
 
-  if (isLoading) return <ListSkeleton rows={6} />;
-  if (error) {
+  if (liveLoading) return <ListSkeleton rows={6} />;
+  if (liveError) {
     return (
       <EmptyState
         title={t("dashboard.loadError")}
-        description={(error as Error).message}
+        description={(liveError as Error).message}
       />
     );
   }
-  if (!data) return null;
+  if (!live) return null;
+
+  const liveStats = [
+    { label: "오늘 세션", value: live.todaySessions, href: "/live-sessions" },
+    { label: "질문", value: live.totals.questions, href: "/live-sessions" },
+    { label: "생방 답변", value: live.totals.answered, href: "/live-sessions" },
+    { label: "부분 답변", value: live.totals.partial, href: "/live-sessions" },
+    { label: "미답변", value: live.totals.unanswered, href: "/live-sessions" },
+    { label: "초안", value: live.draftCount, href: "/live-sessions" },
+    { label: "검토 대기", value: live.reviewPending, href: "/live-sessions" },
+  ];
 
   return (
     <div>
@@ -99,100 +90,75 @@ export function DashboardView() {
         </Button>
       </form>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Link key={card.key} href={card.href}>
-              <Card className="transition-colors hover:border-primary/40">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {t(card.labelKey)}
-                  </CardTitle>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-semibold">
-                    {data.totals[card.key]}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        {liveStats.map((stat) => (
+          <Link key={stat.label} href={stat.href}>
+            <Card className="transition-colors hover:border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                <Radio className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold">{stat.value}</div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+      {live.sessions.length > 0 ? (
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">
-              {t("dashboard.recentCreated")}
-            </CardTitle>
+            <CardTitle className="text-base">최근 라이브 세션</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {data.recentCreated.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {t("dashboard.empty")}
-              </p>
-            ) : (
-              data.recentCreated.map((item) => (
-                <Link
-                  key={`${item.entityType}-${item.id}`}
-                  href={item.href}
-                  className="flex items-start justify-between gap-3 rounded-md border p-3 transition-colors hover:bg-muted/40"
-                >
-                  <div>
-                    <div className="mb-1">
-                      <Badge variant="outline">
-                        {t(entityLabelKey[item.entityType] ?? "entity.problem")}
-                      </Badge>
-                    </div>
-                    <div className="text-sm font-medium">{item.title}</div>
+            {live.sessions.slice(0, 5).map((session) => (
+              <Link
+                key={session.id}
+                href={`/live-sessions/${session.id}`}
+                className="flex items-start justify-between gap-3 rounded-md border p-3 transition-colors hover:bg-muted/40"
+              >
+                <div>
+                  <div className="mb-1 flex gap-2">
+                    <Badge variant={session.status === "LIVE" ? "danger" : "outline"}>
+                      {session.status}
+                    </Badge>
                   </div>
-                  <div className="shrink-0 text-xs text-muted-foreground">
-                    {formatDate(item.createdAt, locale)}
-                  </div>
-                </Link>
-              ))
-            )}
+                  <div className="text-sm font-medium">{session.title}</div>
+                </div>
+                <div className="shrink-0 text-xs text-muted-foreground">
+                  {formatDate(session.updatedAt, locale)}
+                </div>
+              </Link>
+            ))}
           </CardContent>
         </Card>
+      ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {t("dashboard.recentUpdated")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {data.recentUpdated.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {t("dashboard.empty")}
-              </p>
-            ) : (
-              data.recentUpdated.map((item) => (
-                <Link
-                  key={`${item.entityType}-${item.id}`}
-                  href={item.href}
-                  className="flex items-start justify-between gap-3 rounded-md border p-3 transition-colors hover:bg-muted/40"
-                >
-                  <div>
-                    <div className="mb-1">
-                      <Badge variant="outline">
-                        {t(entityLabelKey[item.entityType] ?? "entity.problem")}
-                      </Badge>
+      {legacy ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {legacyStatCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link key={card.key} href={card.href}>
+                <Card className="transition-colors hover:border-primary/40">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      {t(card.labelKey)} (legacy)
+                    </CardTitle>
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-semibold">
+                      {legacy.totals[card.key]}
                     </div>
-                    <div className="text-sm font-medium">{item.title}</div>
-                  </div>
-                  <div className="shrink-0 text-xs text-muted-foreground">
-                    {formatDate(item.updatedAt, locale)}
-                  </div>
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }

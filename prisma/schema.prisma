@@ -75,6 +75,16 @@ model Organization {
   youtubeKnowledgeCandidates YouTubeKnowledgeCandidate[]
   youtubeCapabilityCandidates YouTubeCapabilityCandidate[]
   youtubeQuotaEvents YouTubeApiQuotaEvent[]
+  liveSessions            LiveSession[]
+  submissions             Submission[]
+  questions               Question[]
+  questionClusters        QuestionCluster[]
+  queueItems              QueueItem[]
+  transcriptSegments      TranscriptSegment[]
+  questionAnswerMatches   QuestionAnswerMatch[]
+  liveAnswers             LiveAnswer[]
+  textAnswers             TextAnswer[]
+  publications            Publication[]
 
   @@index([deletedAt])
 }
@@ -83,7 +93,7 @@ model OrganizationMember {
   id             String   @id @default(cuid())
   organizationId String
   userId         String
-  role           String   @default("member")
+  role           String   @default("ADMIN")
   createdAt      DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -709,4 +719,544 @@ model YouTubeApiQuotaEvent {
 
   @@index([organizationId, createdAt])
   @@index([operation])
+}
+
+// --- Lecture Q&A domain ---
+
+enum LiveSessionStatus {
+  DRAFT
+  SCHEDULED
+  PREPARING
+  LIVE
+  ENDED
+  PROCESSING
+  REVIEW_READY
+  ANSWER_WRITING
+  READY_TO_PUBLISH
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
+enum TranscriptStatus {
+  NOT_REQUESTED
+  PENDING
+  PROCESSING
+  AVAILABLE
+  PARTIAL
+  FAILED
+  UNAVAILABLE
+}
+
+enum SubmissionSourceType {
+  YOUTUBE_LIVE_CHAT
+  YOUTUBE_COMMENT
+  YOUTUBE_REPLY
+  MANUAL_INPUT
+  ZOOM_CHAT
+  GOOGLE_MEET_CHAT
+  OTHER
+}
+
+enum QuestionStatus {
+  DETECTED
+  NEEDS_REVIEW
+  ACCEPTED
+  REJECTED
+  DUPLICATE
+  EXCLUDED
+  WAITING
+  QUEUED
+  ASSIGNED
+  PRESENTED_TO_SPEAKER
+  ANSWERING_LIVE
+  ANSWERED_LIVE
+  PARTIALLY_ANSWERED_LIVE
+  UNANSWERED
+  POST_REVIEW_PENDING
+  ANSWER_DRAFTED
+  ANSWER_IN_REVIEW
+  ANSWER_APPROVED
+  READY_TO_PUBLISH
+  PUBLISHED
+  RESOLVED
+  ARCHIVED
+}
+
+enum QuestionCategory {
+  COURSE_CONTENT
+  HOW_TO
+  CLARIFICATION
+  FOLLOW_UP
+  TECHNICAL_ISSUE
+  PAYMENT
+  SCHEDULE
+  REFUND
+  ACCESS
+  MATERIAL
+  POLICY
+  PRODUCT
+  OTHER
+}
+
+enum QuestionPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum AnswerMode {
+  LIVE_VIDEO
+  TEXT_POST
+  YOUTUBE_COMMENT
+  YOUTUBE_COMMUNITY
+  KAKAO_MESSAGE
+  EMAIL
+  LMS
+  PHONE
+  OTHER
+}
+
+enum ClusterStatus {
+  AI_SUGGESTED
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+  SPLIT
+  MERGED
+  ARCHIVED
+}
+
+enum QueueItemStatus {
+  WAITING
+  NEXT
+  PRESENTED
+  ANSWERING
+  COMPLETED
+  SKIPPED
+  DEFERRED
+  REMOVED
+}
+
+enum TranscriptSource {
+  YOUTUBE_CAPTION
+  AUTOMATIC_SPEECH_RECOGNITION
+  MANUAL
+  IMPORTED
+}
+
+enum MatchReviewStatus {
+  AI_SUGGESTED
+  NEEDS_REVIEW
+  CONFIRMED
+  REJECTED
+}
+
+enum AnswerCompleteness {
+  COMPLETE
+  PARTIAL
+  UNCLEAR
+}
+
+enum AnswerReviewStatus {
+  UNREVIEWED
+  AI_SUGGESTED
+  CONFIRMED
+  CORRECTED
+  REJECTED
+}
+
+enum AnswerDraftSource {
+  AI
+  MANUAL
+  LIVE_ANSWER_SUMMARY
+  KNOWLEDGE_REUSE
+  IMPORTED
+}
+
+enum TextAnswerStatus {
+  EMPTY
+  AI_GENERATED
+  DRAFT
+  IN_REVIEW
+  REVISION_REQUESTED
+  APPROVED
+  READY_TO_PUBLISH
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum PublicationChannel {
+  YOUTUBE_COMMUNITY
+  YOUTUBE_COMMENT
+  KAKAO_GROUP
+  EMAIL
+  LMS
+  WEBSITE
+  BLOG
+  OTHER
+}
+
+enum PublicationFormat {
+  SHORT_QA
+  DETAILED_QA
+  FAQ
+  NUMBERED_LIST
+  TOPIC_GROUPED
+  KAKAO_MESSAGE
+  EMAIL
+  ANNOUNCEMENT
+}
+
+enum PublicationStatus {
+  DRAFT
+  IN_REVIEW
+  READY
+  COPIED
+  PUBLISHED
+  FAILED
+  ARCHIVED
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  SPEAKER
+  REVIEWER
+  VIEWER
+}
+
+enum MessageType {
+  QUESTION
+  FOLLOW_UP_QUESTION
+  ANSWER_OR_OPINION
+  PRAISE
+  COMPLAINT
+  REQUEST
+  TECHNICAL_ISSUE
+  CHAT
+  SPAM
+  OTHER
+}
+
+model LiveSession {
+  id                     String            @id @default(cuid())
+  organizationId         String
+  youtubeConnectionId    String?
+  youtubeVideoId         String?
+  title                  String
+  description            String?
+  speakerId              String?
+  moderatorId            String?
+  scheduledStartAt       DateTime?
+  actualStartAt          DateTime?
+  actualEndAt            DateTime?
+  status                 LiveSessionStatus @default(DRAFT)
+  totalSubmissions       Int               @default(0)
+  totalQuestions         Int               @default(0)
+  answeredLiveCount      Int               @default(0)
+  partiallyAnsweredCount Int               @default(0)
+  unansweredCount        Int               @default(0)
+  publishedAnswerCount   Int               @default(0)
+  transcriptStatus       TranscriptStatus  @default(NOT_REQUESTED)
+  lastSyncedAt           DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  deletedAt              DateTime?
+
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  submissions        Submission[]
+  questions          Question[]
+  questionClusters   QuestionCluster[]
+  queueItems         QueueItem[]
+  transcriptSegments TranscriptSegment[]
+  liveAnswers        LiveAnswer[]
+  publications       Publication[]
+
+  @@index([organizationId, deletedAt])
+  @@index([organizationId, status])
+  @@index([youtubeVideoId])
+}
+
+model Submission {
+  id                    String               @id @default(cuid())
+  organizationId        String
+  liveSessionId         String
+  sourceType            SubmissionSourceType
+  externalId            String
+  parentExternalId      String?
+  authorDisplayName     String?
+  authorExternalId      String?
+  authorProfileImageUrl String?
+  originalText          String
+  normalizedText        String?
+  detectedLanguage      String?
+  messageType           MessageType?
+  publishedAt           DateTime
+  likeCount             Int                  @default(0)
+  replyCount            Int                  @default(0)
+  sourceUrl             String?
+  rawPayload            Json?
+  lastSeenAt            DateTime?
+  sourceUnavailableAt   DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  deletedAt             DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession  LiveSession  @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  question     Question?
+
+  @@unique([organizationId, sourceType, externalId])
+  @@index([organizationId, deletedAt])
+  @@index([liveSessionId, deletedAt])
+  @@index([liveSessionId, publishedAt])
+}
+
+model Question {
+  id                 String            @id @default(cuid())
+  organizationId     String
+  liveSessionId      String
+  submissionId       String?           @unique
+  clusterId          String?
+  parentQuestionId   String?
+  questionText       String
+  normalizedQuestion String?
+  detectedLanguage   String?
+  category           QuestionCategory?
+  priority           QuestionPriority  @default(NORMAL)
+  status             QuestionStatus    @default(DETECTED)
+  answerMode         AnswerMode?
+  isRepresentative   Boolean           @default(false)
+  isPinned           Boolean           @default(false)
+  isImportant        Boolean           @default(false)
+  requiresFollowUp   Boolean           @default(false)
+  rejectionReason    String?
+  exclusionReason    String?
+  acceptedAt         DateTime?
+  presentedAt        DateTime?
+  answeringStartedAt DateTime?
+  answeredAt         DateTime?
+  resolvedAt         DateTime?
+  publishedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?
+
+  organization          Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession           LiveSession             @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  submission            Submission?             @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  cluster               QuestionCluster?        @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  parentQuestion        Question?               @relation("QuestionChildren", fields: [parentQuestionId], references: [id], onDelete: SetNull)
+  childQuestions        Question[]              @relation("QuestionChildren")
+  liveAnswers           LiveAnswer[]
+  textAnswers           TextAnswer[]
+  queueItem             QueueItem?
+  questionAnswerMatches QuestionAnswerMatch[]
+  publicationItems      PublicationItem[]
+
+  @@index([organizationId, deletedAt])
+  @@index([liveSessionId, deletedAt])
+  @@index([liveSessionId, status])
+  @@index([clusterId])
+  @@index([parentQuestionId])
+}
+
+model QuestionCluster {
+  id                     String            @id @default(cuid())
+  organizationId         String
+  liveSessionId          String
+  representativeQuestion String
+  summary                String?
+  category               QuestionCategory?
+  priority               QuestionPriority  @default(NORMAL)
+  status                 ClusterStatus     @default(AI_SUGGESTED)
+  questionCount          Int               @default(0)
+  uniqueAuthorCount      Int               @default(0)
+  createdBy              String?
+  approvedBy             String?
+  approvedAt             DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession  LiveSession  @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  questions    Question[]
+
+  @@index([organizationId])
+  @@index([liveSessionId, status])
+}
+
+model QueueItem {
+  id              String          @id @default(cuid())
+  organizationId  String
+  liveSessionId   String
+  questionId      String          @unique
+  defaultPosition Int
+  manualPosition  Int?
+  priorityScore   Int?
+  status          QueueItemStatus @default(WAITING)
+  overrideReason  String?
+  queuedAt        DateTime        @default(now())
+  presentedAt     DateTime?
+  removedAt       DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession  LiveSession  @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  question     Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([liveSessionId, status])
+  @@index([liveSessionId, defaultPosition])
+}
+
+model TranscriptSegment {
+  id             String           @id @default(cuid())
+  organizationId String
+  liveSessionId  String
+  source         TranscriptSource
+  speakerLabel   String?
+  startSeconds   Float
+  endSeconds     Float
+  originalText   String
+  normalizedText String?
+  language       String?
+  confidence     Float?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession     LiveSession             @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  answerMatches   QuestionAnswerMatch[]
+
+  @@index([organizationId])
+  @@index([liveSessionId, startSeconds])
+}
+
+model QuestionAnswerMatch {
+  id                  String            @id @default(cuid())
+  organizationId      String
+  questionId          String
+  transcriptSegmentId String
+  matchScore          Float?
+  matchReason         String?
+  status              MatchReviewStatus @default(AI_SUGGESTED)
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  question          Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  transcriptSegment TranscriptSegment @relation(fields: [transcriptSegmentId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, transcriptSegmentId])
+  @@index([organizationId])
+  @@index([questionId])
+  @@index([transcriptSegmentId])
+}
+
+model LiveAnswer {
+  id             String             @id @default(cuid())
+  organizationId String
+  liveSessionId  String
+  questionId     String
+  answeredBy     String?
+  startSeconds   Float?
+  endSeconds     Float?
+  videoUrl       String?
+  timestampUrl   String?
+  transcriptText String?
+  answerSummary  String?
+  completeness   AnswerCompleteness @default(UNCLEAR)
+  reviewStatus   AnswerReviewStatus @default(UNREVIEWED)
+  confirmedBy    String?
+  confirmedAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession  LiveSession  @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  question     Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([liveSessionId])
+  @@index([questionId])
+}
+
+model TextAnswer {
+  id              String            @id @default(cuid())
+  organizationId  String
+  questionId      String
+  draftSource     AnswerDraftSource @default(MANUAL)
+  aiDraft         String?
+  currentDraft    String?
+  finalAnswer     String?
+  evidenceSummary String?
+  knowledgeIds    Json              @default("[]")
+  status          TextAnswerStatus  @default(EMPTY)
+  createdBy       String?
+  reviewedBy      String?
+  approvedBy      String?
+  reviewedAt      DateTime?
+  approvedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  question         Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  publicationItems PublicationItem[]
+
+  @@index([organizationId])
+  @@index([questionId])
+  @@index([questionId, status])
+}
+
+model Publication {
+  id             String             @id @default(cuid())
+  organizationId String
+  liveSessionId  String
+  title          String
+  introduction   String?
+  content        String
+  closing        String?
+  channelType    PublicationChannel
+  formatType     PublicationFormat
+  status         PublicationStatus  @default(DRAFT)
+  externalUrl    String?
+  copiedAt       DateTime?
+  publishedAt    DateTime?
+  publishedBy    String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSession  LiveSession       @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  items        PublicationItem[]
+
+  @@index([organizationId])
+  @@index([liveSessionId, status])
+}
+
+model PublicationItem {
+  id            String  @id @default(cuid())
+  publicationId String
+  questionId    String
+  textAnswerId  String?
+  position      Int
+  questionText  String
+  answerText    String
+
+  publication Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  textAnswer  TextAnswer? @relation(fields: [textAnswerId], references: [id], onDelete: SetNull)
+
+  @@index([publicationId, position])
+  @@index([questionId])
+  @@index([textAnswerId])
 }

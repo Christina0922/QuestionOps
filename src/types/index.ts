@@ -91,7 +91,11 @@ export type SearchEntityType =
   | "problem"
   | "evidence"
   | "knowledge"
-  | "capability";
+  | "capability"
+  | "live_session"
+  | "question"
+  | "submission"
+  | "publication";
 
 export type SearchHit = {
   id: string;

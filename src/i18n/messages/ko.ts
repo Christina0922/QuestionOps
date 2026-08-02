@@ -2,10 +2,11 @@ import type { Messages } from "./en";
 
 export const ko: Messages = {
   "app.name": "QuestionOps",
-  "app.tagline": "증거 → 역량",
+  "app.tagline": "질문 접수 → 생방송 답변 → Knowledge",
   "app.devUser": "개발 사용자",
 
   "nav.dashboard": "대시보드",
+  "nav.liveSessions": "라이브 세션",
   "nav.problems": "문제",
   "nav.evidence": "증거",
   "nav.clusters": "클러스터",

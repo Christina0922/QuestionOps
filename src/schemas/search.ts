@@ -16,7 +16,18 @@ export const searchSchema = paginationSchema.extend({
     )
     .pipe(
       z
-        .array(z.enum(["problem", "evidence", "knowledge", "capability"]))
+        .array(
+          z.enum([
+            "problem",
+            "evidence",
+            "knowledge",
+            "capability",
+            "live_session",
+            "question",
+            "submission",
+            "publication",
+          ]),
+        )
         .optional(),
     ),
 });
