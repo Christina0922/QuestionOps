@@ -37,8 +37,35 @@ const legacyStatCards = [
   },
 ];
 
+const guideSteps: Array<{
+  titleKey: MessageKey;
+  descKey: MessageKey;
+}> = [
+  {
+    titleKey: "dashboard.guide.step1",
+    descKey: "dashboard.guide.step1Desc",
+  },
+  {
+    titleKey: "dashboard.guide.step2",
+    descKey: "dashboard.guide.step2Desc",
+  },
+  {
+    titleKey: "dashboard.guide.step3",
+    descKey: "dashboard.guide.step3Desc",
+  },
+  {
+    titleKey: "dashboard.guide.step4",
+    descKey: "dashboard.guide.step4Desc",
+  },
+  {
+    titleKey: "dashboard.guide.step5",
+    descKey: "dashboard.guide.step5Desc",
+  },
+];
+
 export function DashboardView() {
-  const { data: live, isLoading: liveLoading, error: liveError } = useLiveDashboard();
+  const { data: live, isLoading: liveLoading, error: liveError } =
+    useLiveDashboard();
   const { data: legacy } = useDashboard();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -70,13 +97,50 @@ export function DashboardView() {
       <PageHeader
         title={t("dashboard.title")}
         description={t("dashboard.description")}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/live-sessions">{t("dashboard.guide.cta")}</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/live-sessions/new">{t("dashboard.guide.ctaNew")}</Link>
+            </Button>
+          </div>
+        }
       />
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">{t("dashboard.guide.title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {t("dashboard.guide.intro")}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ol className="space-y-4">
+            {guideSteps.map((step, index) => (
+              <li key={step.titleKey} className="flex gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                  {index + 1}
+                </span>
+                <div>
+                  <div className="text-sm font-medium">{t(step.titleKey)}</div>
+                  <p className="text-sm text-muted-foreground">
+                    {t(step.descKey)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
 
       <form
         className="mb-6 flex gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          if (q.trim()) router.push(`/search?q=${encodeURIComponent(q.trim())}`);
+          if (q.trim())
+            router.push(`/search?q=${encodeURIComponent(q.trim())}`);
         }}
       >
         <Input
@@ -95,7 +159,9 @@ export function DashboardView() {
           <Link key={stat.label} href={stat.href}>
             <Card className="transition-colors hover:border-primary/40">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {stat.label}
+                </CardTitle>
                 <Radio className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -109,7 +175,9 @@ export function DashboardView() {
       {live.sessions.length > 0 ? (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">최근 라이브 세션</CardTitle>
+            <CardTitle className="text-base">
+              {t("dashboard.recentSessions")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {live.sessions.slice(0, 5).map((session) => (
@@ -120,7 +188,11 @@ export function DashboardView() {
               >
                 <div>
                   <div className="mb-1 flex gap-2">
-                    <Badge variant={session.status === "LIVE" ? "danger" : "outline"}>
+                    <Badge
+                      variant={
+                        session.status === "LIVE" ? "danger" : "outline"
+                      }
+                    >
                       {session.status}
                     </Badge>
                   </div>
@@ -144,7 +216,7 @@ export function DashboardView() {
                 <Card className="transition-colors hover:border-primary/40">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      {t(card.labelKey)} (legacy)
+                      {t(card.labelKey)}
                     </CardTitle>
                     <Icon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>

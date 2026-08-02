@@ -72,9 +72,9 @@ export const en = {
 
   "dashboard.title": "Dashboard",
   "dashboard.description":
-    "Track problems through evidence, knowledge, and capability.",
+    "Lecture Q&A ops: intake → live answer → publish → Knowledge.",
   "dashboard.searchPlaceholder":
-    "Search problems, evidence, knowledge, capabilities…",
+    "Search sessions, questions, knowledge, publications…",
   "dashboard.loadError": "Could not load dashboard",
   "dashboard.recentCreated": "Recently created",
   "dashboard.recentUpdated": "Recently updated",
@@ -83,6 +83,22 @@ export const en = {
   "dashboard.stat.evidences": "Evidence",
   "dashboard.stat.knowledge": "Knowledge",
   "dashboard.stat.capabilities": "Capabilities",
+  "dashboard.guide.title": "How to use",
+  "dashboard.guide.intro":
+    "QuestionOps is not an auto-reply chatbot. Operators route questions; instructors answer live by voice; drafts are reviewed before publish.",
+  "dashboard.guide.step1": "Create or open a Live Session",
+  "dashboard.guide.step1Desc": "Start from Live Sessions. Import mock chat or YouTube comments.",
+  "dashboard.guide.step2": "Accept questions",
+  "dashboard.guide.step2Desc": "Separate chat from questions, then accept into the queue.",
+  "dashboard.guide.step3": "Run Control during live",
+  "dashboard.guide.step3Desc": "Present to speaker. Mark answered, partial, or later. Shortcuts: A / P / L / N.",
+  "dashboard.guide.step4": "After the stream",
+  "dashboard.guide.step4Desc": "Prepare review, open unanswered, generate instructor drafts, approve.",
+  "dashboard.guide.step5": "Publish by copy",
+  "dashboard.guide.step5Desc": "Build a Q&A post, copy for Kakao / YouTube / email, then mark published.",
+  "dashboard.guide.cta": "Open Live Sessions",
+  "dashboard.guide.ctaNew": "New session",
+  "dashboard.recentSessions": "Recent live sessions",
 
   "problems.title": "Problems",
   "problems.description": "Customer problems under investigation.",

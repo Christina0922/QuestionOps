@@ -70,9 +70,9 @@ export const ko: Messages = {
 
   "dashboard.title": "대시보드",
   "dashboard.description":
-    "문제를 증거·지식·역량으로 추적합니다.",
+    "강의 질문 운영: 접수 → 생방송 답변 → 게시 → Knowledge.",
   "dashboard.searchPlaceholder":
-    "문제, 증거, 지식, 역량 검색…",
+    "세션, 질문, Knowledge, 게시물 검색…",
   "dashboard.loadError": "대시보드를 불러올 수 없습니다",
   "dashboard.recentCreated": "최근 생성",
   "dashboard.recentUpdated": "최근 수정",
@@ -81,6 +81,22 @@ export const ko: Messages = {
   "dashboard.stat.evidences": "증거",
   "dashboard.stat.knowledge": "지식",
   "dashboard.stat.capabilities": "역량",
+  "dashboard.guide.title": "사용법",
+  "dashboard.guide.intro":
+    "QuestionOps는 자동 답변 챗봇이 아닙니다. 운영자가 질문을 정리하고, 강사가 생방송에서 음성으로 답하며, 승인 후에만 게시합니다.",
+  "dashboard.guide.step1": "라이브 세션 만들기",
+  "dashboard.guide.step1Desc": "라이브 세션에서 시작하세요. mock 채팅 또는 YouTube 댓글을 가져옵니다.",
+  "dashboard.guide.step2": "질문 승인하기",
+  "dashboard.guide.step2Desc": "일반 채팅과 질문을 구분한 뒤, 처리할 질문을 승인·Queue에 넣습니다.",
+  "dashboard.guide.step3": "생방송 Control",
+  "dashboard.guide.step3Desc": "강사에게 전달하고 답변 완료·부분 답변·나중에를 표시합니다. 단축키: A / P / L / N.",
+  "dashboard.guide.step4": "방송 종료 후",
+  "dashboard.guide.step4Desc": "검토 준비 → 미답변함 → 강사용 초안 생성 → 승인.",
+  "dashboard.guide.step5": "게시물 복사",
+  "dashboard.guide.step5Desc": "Q&A 게시물을 만들고 카카오/유튜브/이메일용으로 복사한 뒤 게시 완료를 기록합니다.",
+  "dashboard.guide.cta": "라이브 세션 열기",
+  "dashboard.guide.ctaNew": "새 세션",
+  "dashboard.recentSessions": "최근 라이브 세션",
 
   "problems.title": "문제",
   "problems.description": "조사 중인 고객 문제입니다.",
